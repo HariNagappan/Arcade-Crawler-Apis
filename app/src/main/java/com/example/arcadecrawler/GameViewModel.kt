@@ -184,6 +184,7 @@ class GameViewModel: ViewModel() {
             val res=api.GetRandomColor()
             val rand=GetColorByStringHex(res.color)
             random_color=rand
+            Log.d("randomcolor","yes passed color")
         }
         catch (e:Exception){
             Log.d("apierror","Could not Load Color")
@@ -197,6 +198,7 @@ class GameViewModel: ViewModel() {
         try{
             val response=api.GetLoadingScreenImage()
             bg_bitmap=BitmapFactory.decodeStream(response.byteStream())
+            Log.d("randomcolor","successfully retrieved image")
         }
         catch (e:Exception){
             Log.d("apierror","Could not Load Background Image")
@@ -224,10 +226,12 @@ class GameViewModel: ViewModel() {
     suspend fun FetchSkins(){
         try{
             val response=api.GetSkins()
+            Log.d("apisuccess","$response")
             normal_mushroom_bitmap=GetImageBitmapByUrlSvg(response.mushrooms[0])
             poison_mushroom_bitmap=GetImageBitmapByUrlSvg(response.mushrooms[1])
             gun_bitmap=GetImageBitmapByUrlSvg(response.guns[0])
             scorpion_bitmap=GetImageBitmapByUrlSvg(response.scorpions[0])
+            Log.d("apisuccess","Loaded Skins,${normal_mushroom_bitmap!!.width}")
         }
         catch (e:Exception){
             error_msg+="\nCould not Load Skins"
