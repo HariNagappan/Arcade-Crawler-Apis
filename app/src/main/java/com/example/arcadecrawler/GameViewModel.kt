@@ -57,6 +57,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
+import androidx.core.graphics.createBitmap
 
 class GameViewModel: ViewModel() {
     var joyStick by mutableStateOf(Joystick())
@@ -115,7 +116,7 @@ class GameViewModel: ViewModel() {
     private var scorpiondelaythread:Job?=null
 
 
-    var org_mushroom_count by mutableStateOf(10)
+    //var org_mushroom_count by mutableStateOf(10)
     var cur_mushroom_id = 0
         private set
     val mushroom_list = mutableStateListOf<Mushroom>()
@@ -143,7 +144,8 @@ class GameViewModel: ViewModel() {
     var fetchmushroomlayoutjob:Deferred<Unit>?=null
     var fetchrandomcolorjob:Deferred<Unit>?=null
     var fetchskinsjob:Deferred<Unit>?=null
-    var all_jobs=listOf(fetchbgimagejob,fetchbgaudiojob,fetchmushroomlayoutjob,fetchrandomcolorjob,fetchskinsjob)
+    var fetchleaderboardjob: Deferred<Unit>?=null
+    var all_jobs=listOf(fetchbgimagejob,fetchbgaudiojob,fetchmushroomlayoutjob,fetchrandomcolorjob,fetchskinsjob,fetchleaderboardjob)
 
     var random_color by mutableStateOf(Color.Green)
 
@@ -152,6 +154,11 @@ class GameViewModel: ViewModel() {
     var poison_mushroom_bitmap:ImageBitmap?=null
     var gun_bitmap :ImageBitmap?=null
     var scorpion_bitmap :ImageBitmap?=null
+    val leaderboard =mutableListOf<LeaderboardGet>()
+    var top10=listOf<LeaderboardGet>()
+    var relative_mushroom_layout =mutableListOf<List<Float>>()
+    var cur_player_name:String=""
+    var cur_player_password:String=""
 
     lateinit var bg_audio_file:File
     var error_msg=""
@@ -164,6 +171,7 @@ class GameViewModel: ViewModel() {
                  fetchrandomcolorjob= async(Dispatchers.IO) { FetchRandomColor() }
                  fetchskinsjob= async(Dispatchers.IO) { FetchSkins() }
                  fetchmushroomlayoutjob= async(Dispatchers.IO) { FetchMushroomLayout() }
+                fetchleaderboardjob =async (Dispatchers.IO){FetchLeaderboard()}
              }
 
             fetchbgimagejob!!.await()
@@ -173,9 +181,12 @@ class GameViewModel: ViewModel() {
             fetchskinsjob!!.await()
             Log.d("apisuccess","fetched skins")
             fetchmushroomlayoutjob!!.await()
-            Log.d("apisuccess","fetched mushroom layout")
+            Log.d("apisuccess","fetched mushroom layout,$relative_mushroom_layout")
+            fetchleaderboardjob!!.await()
+            Log.d("apisuccess","fetched leaderboard,$leaderboard")
             fetchbgaudiojob!!.await()
             Log.d("apisuccess","fetched audio")
+
 
         }
     }
@@ -184,7 +195,6 @@ class GameViewModel: ViewModel() {
             val res=api.GetRandomColor()
             val rand=GetColorByStringHex(res.color)
             random_color=rand
-            Log.d("randomcolor","yes passed color")
         }
         catch (e:Exception){
             Log.d("apierror","Could not Load Color")
@@ -194,18 +204,17 @@ class GameViewModel: ViewModel() {
         Log.d("randomcolor","color=$random_color.")
         //FetchRandomColor()
     }
-    suspend fun FetchBgImage(){
+    private suspend fun FetchBgImage(){
         try{
             val response=api.GetLoadingScreenImage()
             bg_bitmap=BitmapFactory.decodeStream(response.byteStream())
-            Log.d("randomcolor","successfully retrieved image")
         }
         catch (e:Exception){
             Log.d("apierror","Could not Load Background Image")
             error_msg+="\nCould not Load Background Image"
         }
     }
-    suspend fun FetchBgAudio(context: Context){
+    private suspend fun FetchBgAudio(context: Context){
         bg_audio_file = File(context.filesDir,"bg_music.mp3")
         bg_audio_file.createNewFile()
         FileOutputStream(bg_audio_file).channel.truncate(0).close()
@@ -223,29 +232,81 @@ class GameViewModel: ViewModel() {
             error_msg += "\nCould not Load Background Music"
         }
     }
-    suspend fun FetchSkins(){
+    private suspend fun FetchSkins(){
         try{
             val response=api.GetSkins()
-            Log.d("apisuccess","$response")
             normal_mushroom_bitmap=GetImageBitmapByUrlSvg(response.mushrooms[0])
             poison_mushroom_bitmap=GetImageBitmapByUrlSvg(response.mushrooms[1])
             gun_bitmap=GetImageBitmapByUrlSvg(response.guns[0])
             scorpion_bitmap=GetImageBitmapByUrlSvg(response.scorpions[0])
-            Log.d("apisuccess","Loaded Skins,${normal_mushroom_bitmap!!.width}")
         }
         catch (e:Exception){
             error_msg+="\nCould not Load Skins"
             Log.d("apierror","Could not Load Skins")
         }
     }
-    suspend fun FetchMushroomLayout(){
+    private suspend fun FetchMushroomLayout(){
         try{
             val response=api.GetMushroomLayout()
-
+            relative_mushroom_layout.clear()
+            relative_mushroom_layout.addAll(response.layout)
         }
         catch (e:Exception){
             error_msg+="\nCould not Load Mushroom coordinates"
         }
+    }
+    fun GetMushroomLayout(){
+        viewModelScope.launch {
+            val tmp=async(Dispatchers.IO) {
+                FetchMushroomLayout()
+            }
+            tmp.await()
+        }
+    }
+    private suspend fun FetchLeaderboard(){
+        try{
+            val response=api.GetLeaderboard()
+            leaderboard.clear()
+            leaderboard.addAll(response)
+            GetTop10()
+        }
+        catch (e: Exception){
+            error_msg+="\nCould not fetch Leaderboard"
+        }
+    }
+
+    fun SubmitPlayerData(player_data: LeaderboardPost){
+        viewModelScope.launch {
+            val tmp=async(Dispatchers.IO){PostPlayerData(player_data=player_data)}
+            tmp.await()
+        }
+    }
+    fun GetLeaderboardData(){
+        viewModelScope.launch {
+            val tmp=async(Dispatchers.IO) { FetchLeaderboard() }
+            tmp.await()
+
+        }
+
+    }
+    private suspend fun PostPlayerData(player_data: LeaderboardPost){
+        try {
+            val response=api.PostPlayerData(player_data=player_data)
+            Log.d("apisuccess","response:$response")
+        }
+        catch (e: Exception){
+            error_msg+="\nCould not Post Player Data "
+            Log.d("apifail","$error_msg")
+        }
+    }
+    fun GetTop10(){
+        top10=leaderboard.sortedBy { it.score }.take(10)
+        Log.d("apisuccess","top 10: size:${top10.size}")
+    }
+    fun GetPlayerName(context: Context){//put this after leadboard is complete as we have to get a unique name
+        val prefs=context.getSharedPreferences(shared_pref_filename, Context.MODE_PRIVATE)
+        cur_player_name=prefs.getString("player_name","")?:""
+        cur_player_password=prefs.getString("player_password","")?:""
     }
 
     fun UpdateGunPosition(newOffset: Offset) {
@@ -834,39 +895,50 @@ class GameViewModel: ViewModel() {
         IncrementMushroomId()
     }
     fun AddMushrooms(mushroomType: MushroomType, leastx:Float,maxx:Float,leasty:Float,maxy:Float,mushroomwidth:Float,mushroomheight:Float){
-        var randomx:Float
-        var randomy:Float
-        var j:Int
-        for(i in 0 until org_mushroom_count){
-            randomx=Random.nextFloat() * (maxx-leastx) + leastx
-            randomy=Random.nextFloat() * (maxy-leasty) + leasty
-            j=0
-            while(j < mushroom_list.size){
-                if(IsOverlapping(
-                        startA=Offset(randomx,randomy),
-                        widthA=mushroomwidth,
-                        heightA = mushroomheight,
-                        startB=mushroom_list[j].mushroom_position,
-                    xtra=Offset(64f,64f))){
-                    randomx=Random.nextFloat() * (maxx-leastx) + leastx
-                    randomy=Random.nextFloat() * (maxy-leasty) + leasty
-                    j=0
-                    continue
-                }
-                j+=1
-            }
-            this.mushroomwidth=mushroomwidth
-            this.mushroomheight=mushroomheight
+//        var randomx:Float
+//        var randomy:Float
+//        var j:Int
+//        for(i in 0 until org_mushroom_count){
+//            randomx=Random.nextFloat() * (maxx-leastx) + leastx
+//            randomy=Random.nextFloat() * (maxy-leasty) + leasty
+//            j=0
+//            while(j < mushroom_list.size){
+//                if(IsOverlapping(
+//                        startA=Offset(randomx,randomy),
+//                        widthA=mushroomwidth,
+//                        heightA = mushroomheight,
+//                        startB=mushroom_list[j].mushroom_position,
+//                    xtra=Offset(64f,64f))){
+//                    randomx=Random.nextFloat() * (maxx-leastx) + leastx
+//                    randomy=Random.nextFloat() * (maxy-leasty) + leasty
+//                    j=0
+//                    continue
+//                }
+//                j+=1
+//            }
+//            this.mushroomwidth=mushroomwidth
+//            this.mushroomheight=mushroomheight
+//            AddMushroom(
+//                offset = Offset(randomx,randomy),
+//                mushroomType=mushroomType,
+//                mushroomwidth=mushroomwidth,
+//                mushroomheight=mushroomheight
+//            )
+//        }
+        this.mushroomwidth=mushroomwidth
+        this.mushroomheight=mushroomheight
+        for(relative in 0 until relative_mushroom_layout.size){
             AddMushroom(
-                offset = Offset(randomx,randomy),
-                mushroomType=mushroomType,
-                mushroomwidth=mushroomwidth,
-                mushroomheight=mushroomheight
+                offset = Offset(relative_mushroom_layout[relative][0],relative_mushroom_layout[relative][1]),
+                mushroomType = MushroomType.NORMAL,
+                mushroomwidth = mushroomwidth,
+                mushroomheight = mushroomheight
             )
+            IncrementMushroomId()
         }
     }
     fun ResetMushrooms(){
-        org_mushroom_count=10
+        //org_mushroom_count=10
         mushroom_list.clear()
         cur_mushroom_id=0
         should_spawn_mushrooms=true
@@ -1001,8 +1073,7 @@ class GameViewModel: ViewModel() {
         try {
             val stream = URL(url).openStream()
             val svg = SVG.getFromInputStream(stream)
-
-            val bitmap = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888)//TODO change this 64 to defualt value
+            val bitmap = createBitmap(64, 64)//TODO change this 64 to defualt value
             val canvas = Canvas(bitmap)
             svg.setDocumentWidth(bitmap.width.toFloat())
             svg.setDocumentHeight(bitmap.height.toFloat())

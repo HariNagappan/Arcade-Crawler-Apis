@@ -1,10 +1,14 @@
 package com.example.arcadecrawler
 
+import com.google.gson.JsonObject
 import okhttp3.ResponseBody
 import retrofit2.Call
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.Streaming
 import java.util.Random
 
@@ -24,7 +28,13 @@ interface ApiArcadeCrawler {
     suspend fun GetSkins():Skins
 
     @GET("mushroomLayout")
-    suspend fun GetMushroomLayout():MushroomLayout
+    suspend fun GetMushroomLayout(): RelativeMushroomLayout
+
+    @GET("leaderboard")
+    suspend fun GetLeaderboard():List<LeaderboardGet>
+
+    @POST("updatelead")
+    suspend fun PostPlayerData(@Body player_data: LeaderboardPost): Response<JsonObject>
 
 }
 val retro= Retrofit.Builder()

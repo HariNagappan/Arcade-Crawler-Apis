@@ -76,6 +76,17 @@ data class Skins(
     val guns:List<String>,
     val scorpions:List<String>
 )
-data class MushroomLayout(
+data class RelativeMushroomLayout(
     val layout:List<List<Float>>
 )
+data class LeaderboardGet(
+    val name:String,
+    val score:Int,
+    val created_at:String,
+)
+data class LeaderboardPost(
+    val name:String,
+    val password:String,
+    val score:Int
+)
+

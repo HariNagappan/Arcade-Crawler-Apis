@@ -116,6 +116,16 @@ fun MainGame(gameViewModel: GameViewModel,onnavigateup:()->Unit,onnavigaterestar
                 gameViewModel = gameViewModel)
         }
         if(gameViewModel.iswin){
+            val tmp=gameViewModel.leaderboard.find { it.name==gameViewModel.cur_player_name }
+            if(tmp==null || (tmp!=null && tmp.score>gameViewModel.total_bullet_count)) {//check for min bullet count if there
+                gameViewModel.SubmitPlayerData(
+                    LeaderboardPost(
+                        name = gameViewModel.cur_player_name,
+                        password = gameViewModel.cur_player_password,
+                        score = gameViewModel.total_bullet_count
+                    )
+                )
+            }
             WinDialog(
                 onnavigateup={
                     onnavigateup()},
@@ -184,8 +194,11 @@ fun MainCanvas(gameViewModel: GameViewModel,modifier:Modifier){
         gameViewModel.UpdateGunPosition(originalguntopleft)
     }
     LaunchedEffect(gameViewModel.should_spawn_mushrooms) {
-        if(gameViewModel.should_spawn_mushrooms) {
-            gameViewModel.AddMushrooms(
+         if(gameViewModel.should_spawn_mushrooms) {
+             gameViewModel.relative_mushroom_layout=
+                 gameViewModel.relative_mushroom_layout.map { listOf(it[0]*(canvas_size.width - mushroombitmap.width),it[1]* (originalguntopleft.y - with(localdensity) { 70.dp.toPx() } - mushroombitmap.height)).toMutableList() }.toMutableList()
+             Log.d("apisuccess","relativemushroomlayout:${gameViewModel.relative_mushroom_layout.size}")
+             gameViewModel.AddMushrooms(
                 mushroomType = MushroomType.NORMAL,
                 leastx = 0f,
                 maxx = (canvas_size.width - mushroombitmap.width).toFloat(),
@@ -194,8 +207,11 @@ fun MainCanvas(gameViewModel: GameViewModel,modifier:Modifier){
                 mushroomwidth = mushroombitmap.width.toFloat(),
                 mushroomheight = mushroombitmap.height.toFloat()
             )
+
+            gameViewModel.GetMushroomLayout()
             gameViewModel.should_spawn_mushrooms = false
         }
+
     }
     LaunchedEffect(gameViewModel.initial_snakes) {
         Log.d("initialsnakes","${gameViewModel.initial_snakes}")
@@ -370,8 +386,8 @@ fun MainCanvas(gameViewModel: GameViewModel,modifier:Modifier){
     Box(modifier=Modifier
         .offset {
             IntOffset(
-                bulletfireoffset.x.toInt(),
-                bulletfireoffset.y.toInt()
+                bulletfireoffset.x.toInt()-15.dp.toPx().toFloat().toInt(),
+                bulletfireoffset.y.toInt()-15.dp.toPx().toFloat().toInt()
             )
         }
         .size(

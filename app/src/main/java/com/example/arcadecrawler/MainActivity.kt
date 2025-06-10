@@ -1,80 +1,65 @@
 package com.example.arcadecrawler
 
-import android.R.attr.onClick
 import android.app.Activity
 import android.content.Context
-import android.graphics.BitmapFactory
-import android.icu.number.NumberFormatter.UnitWidth
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.ProgressBar
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.animation.VectorConverter
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.DisplayMode.Companion.Picker
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
@@ -83,26 +68,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.zIndex
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.NavHost
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.arcadecrawler.ui.theme.ArcadeCrawlerTheme
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.runBlocking
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import kotlin.coroutines.Continuation
 
 class MainActivity : ComponentActivity() {
 
@@ -132,7 +109,9 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             ArcadeCrawlerTheme {
-                Box(modifier = Modifier.fillMaxSize().background(color = Color.Transparent)) {
+                Box(modifier = Modifier
+                    .fillMaxSize()
+                    .background(color = Color.Transparent)) {
                         StartGame(gameViewModel = gameViewModel)
                     }
             }
@@ -151,7 +130,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun StartGame(gameViewModel: GameViewModel, navController: NavHostController = rememberNavController()){
     //Log.d("apierror","${gameViewModel.fetchalldata?.isActive}")
-    NavHost(navController = navController, startDestination = Screens.LOADING.name, modifier = Modifier.fillMaxSize().statusBarsPadding()){
+    NavHost(navController = navController, startDestination = Screens.LOADING.name, modifier = Modifier
+        .fillMaxSize()
+        .statusBarsPadding()){
         composable (Screens.LOADING.name){
             LoadingScreen(gameViewModel=gameViewModel,
                 onloadcomplete = {
@@ -194,12 +175,15 @@ fun StartGame(gameViewModel: GameViewModel, navController: NavHostController = r
 fun StartScreen(onsettingclick:() ->Unit,onplayclick:() ->Unit,gameViewModel: GameViewModel){
     var about_dialog_visible by remember { mutableStateOf(false) }
     var snake_dialog_visible by remember{mutableStateOf(false)}
+    var leaderboard_dialog_visible by remember { mutableStateOf(false) }
+    var player_info_visible by remember { mutableStateOf(gameViewModel.cur_player_name=="") }
     val context= LocalContext.current
     SetPreviousSpeeds(gameViewModel=gameViewModel,context=context)
     SetPreviousBrightness(context=context,gameViewModel=gameViewModel)
     SetBrightness(context=context, newbrightness = 0.7f)
     SetPreviousGunMovement(context=context,gameViewModel=gameViewModel)
     SetPreviousGyroSensitivity(context=context,gameViewModel=gameViewModel)
+
     if (gameViewModel.bgplayer == null) {
         Log.d("arcadething", "set up music players")
         gameViewModel.SetMusicPlayers(context = context)
@@ -209,96 +193,147 @@ fun StartScreen(onsettingclick:() ->Unit,onplayclick:() ->Unit,gameViewModel: Ga
         gameViewModel.StartBgMusic()
     }
     SetPreviousBgVolume(gameViewModel=gameViewModel,context=context)
-    Box(modifier=Modifier.fillMaxSize()){
+    Box(modifier=Modifier.fillMaxSize()) {
         Image(
-            painter= painterResource(R.drawable.homescreen),
+            painter = painterResource(R.drawable.homescreen),
             contentDescription = null,
-            modifier=Modifier.fillMaxSize().align(Alignment.Center),
+            modifier = Modifier
+                .fillMaxSize()
+                .align(Alignment.Center),
             contentScale = ContentScale.FillBounds
         )
         Text(
-            text="ARCADE",
+            text = "ARCADE",
             fontSize = 56.sp,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
-            color=colorResource(R.color.little_dark_purple),
+            color = colorResource(R.color.little_dark_purple),
             fontFamily = FontFamily(Font(R.font.arcade)),
-            modifier=Modifier
+            modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(top=32.dp)
+                .padding(top = 32.dp)
         )
         Text(
-            text="CRAWLER",
+            text = "CRAWLER",
             fontSize = 56.sp,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
-            color=colorResource(R.color.little_dark_purple),
+            color = colorResource(R.color.little_dark_purple),
             fontFamily = FontFamily(Font(R.font.arcade)),
-            modifier=Modifier
+            modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(top=92.dp)
+                .padding(top = 92.dp)
         )
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier=Modifier.align(Alignment.BottomCenter).padding(bottom=32.dp).fillMaxWidth()){
-            Box(modifier=Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 32.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
                 Image(
-                    painter = painterResource(R.drawable.settings),
-                    contentDescription = null,
-                    contentScale = ContentScale.FillBounds,
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .padding(8.dp)
-                        .size(110.dp)
-                        .clip(CircleShape)
-                        .clickable {
-                            gameViewModel.PlayButtonClick()
-                            onsettingclick()
-                        }
-                )
-                Image(
-                    painter = painterResource(R.drawable.play),
+                    painter = painterResource(R.drawable.leaderboard),
                     contentDescription = null,
                     contentScale = ContentScale.FillBounds,
                     modifier = Modifier
                         .size(110.dp)
-                        .clip(CircleShape)
+                        .clip(RoundedCornerShape(32.dp))
                         .clickable {
                             gameViewModel.PlayButtonClick()
-                            snake_dialog_visible=true
-                        }
-                        .align(Alignment.Center)
-                        //.padding(8.dp)
-                )
-                Image(
-                    painter = painterResource(R.drawable.info),
-                    contentDescription = null,
-                    contentScale = ContentScale.FillBounds,
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .padding(8.dp)
-                        .size(110.dp)
-                        .clip(CircleShape)
-                        .clickable {
-                            gameViewModel.PlayButtonClick()
-                            about_dialog_visible=true
+                            leaderboard_dialog_visible = true
                         }
                 )
             }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Image(
+                        painter = painterResource(R.drawable.settings),
+                        contentDescription = null,
+                        contentScale = ContentScale.FillBounds,
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .padding(8.dp)
+                            .size(110.dp)
+                            .clip(CircleShape)
+                            .clickable {
+                                gameViewModel.PlayButtonClick()
+                                onsettingclick()
+                            }
+                    )
+                    Image(
+                        painter = painterResource(R.drawable.play),
+                        contentDescription = null,
+                        contentScale = ContentScale.FillBounds,
+                        modifier = Modifier
+                            .size(110.dp)
+                            .clip(CircleShape)
+                            .clickable {
+                                gameViewModel.PlayButtonClick()
+                                snake_dialog_visible = true
+                            }
+                            .align(Alignment.Center)
+                        //.padding(8.dp)
+                    )
+                    Image(
+                        painter = painterResource(R.drawable.info),
+                        contentDescription = null,
+                        contentScale = ContentScale.FillBounds,
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .padding(8.dp)
+                            .size(110.dp)
+                            .clip(CircleShape)
+                            .clickable {
+                                gameViewModel.PlayButtonClick()
+                                about_dialog_visible = true
+                            }
+                    )
+                }
+            }
         }
-        if(about_dialog_visible){
-            AboutDialog(ondismiss = {about_dialog_visible=false},
-                gameViewModel=gameViewModel)
+        if (about_dialog_visible) {
+            AboutDialog(
+                ondismiss = { about_dialog_visible = false },
+                gameViewModel = gameViewModel
+            )
         }
-        if(snake_dialog_visible){
-            SnakeDialog(ondismiss = {snake_dialog_visible=false},onplayclick={onplayclick()},gameViewModel=gameViewModel)
+        if (snake_dialog_visible) {
+            SnakeDialog(
+                ondismiss = { snake_dialog_visible = false },
+                onplayclick = { onplayclick() },
+                gameViewModel = gameViewModel
+            )
+        }
+        if (leaderboard_dialog_visible) {
+            gameViewModel.GetLeaderboardData()
+            LeaderboardDialog(
+                ondismiss = { leaderboard_dialog_visible = false },
+                gameViewModel = gameViewModel
+            )
+        }
+        if(player_info_visible){
+            PlayerInfoDialog(ondismiss = {player_info_visible=false},gameViewModel=gameViewModel)
         }
     }
-}
+    }
 @Composable
 fun AboutDialog(ondismiss:() ->Unit,gameViewModel: GameViewModel){
     Dialog(onDismissRequest = {ondismiss()}) {
-            Box(modifier=Modifier.size(350.dp,400.dp).background(color= colorResource(R.color.blueish), shape = RoundedCornerShape(33.dp))) {
+            Box(modifier=Modifier
+                .size(350.dp, 400.dp)
+                .background(
+                    color = colorResource(R.color.blueish),
+                    shape = RoundedCornerShape(33.dp)
+                )) {
                 Image(
                     painter = painterResource(R.drawable.close),
                     contentDescription = null,
@@ -348,9 +383,15 @@ fun SnakeDialog(ondismiss: () -> Unit,onplayclick: () -> Unit,gameViewModel: Gam
     Dialog(onDismissRequest = {ondismiss()}) {
         Box (
             modifier=Modifier
-                .size(300.dp,250.dp)
-                .background(shape = RoundedCornerShape(16.dp),color= colorResource(R.color.blueish))){
-            Column (verticalArrangement = Arrangement.SpaceBetween,horizontalAlignment=Alignment.CenterHorizontally,modifier=Modifier.align(Alignment.Center).fillMaxSize().padding(8.dp)){
+                .size(300.dp, 250.dp)
+                .background(
+                    shape = RoundedCornerShape(16.dp),
+                    color = colorResource(R.color.blueish)
+                )){
+            Column (verticalArrangement = Arrangement.SpaceBetween,horizontalAlignment=Alignment.CenterHorizontally,modifier=Modifier
+                .align(Alignment.Center)
+                .fillMaxSize()
+                .padding(8.dp)){
                 Box(modifier=Modifier.fillMaxWidth()) {
                     Text(
                         text = "Snakes",
@@ -438,6 +479,153 @@ fun SnakeDialog(ondismiss: () -> Unit,onplayclick: () -> Unit,gameViewModel: Gam
 }
 
 @Composable
+fun LeaderboardDialog(ondismiss: () -> Unit,gameViewModel: GameViewModel){
+    Dialog(onDismissRequest = {ondismiss()}) {
+        Box(modifier=Modifier
+            .size(350.dp, 400.dp)
+            .background(color = colorResource(R.color.blueish), shape = RoundedCornerShape(33.dp))) {
+            Image(
+                painter = painterResource(R.drawable.close),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(48.dp)
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
+                    .clip(CircleShape)
+                    .clickable {
+                        gameViewModel.PlayButtonClick()
+                        ondismiss()
+                    }
+            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Text(
+                    text = "Leaderboard",
+                    fontSize = 24.sp,
+                    textAlign = TextAlign.Center,
+                    color = colorResource(R.color.little_dark_purple),
+                    fontFamily = FontFamily(Font(R.font.arcade)),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Column(horizontalAlignment = Alignment.CenterHorizontally,modifier= Modifier.verticalScroll(rememberScrollState())) {
+                    for(i in 0 until gameViewModel.top10.size){
+                        LeaderboardCard(rank = i+1, leaderboard = gameViewModel.top10[i], cur_player_name = gameViewModel.cur_player_name)
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PlayerInfoDialog(ondismiss: () -> Unit,gameViewModel: GameViewModel){
+    var cur_name by remember { mutableStateOf("") }
+    var cur_password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    val context=LocalContext.current
+    Dialog(onDismissRequest = {ondismiss()}){
+        Card(
+            colors = CardDefaults.cardColors(colorResource(R.color.blueish))
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text="Player Info",
+                    color=colorResource(R.color.little_dark_purple)
+                )
+                Text(
+                    text="Please tell us about yourself",
+                    color=colorResource(R.color.charcoal)
+                )
+                Row(){
+                    Text(
+                        text="Your Name:",
+                        modifier=Modifier.padding(4.dp),
+                        color=colorResource(R.color.dark_gold)
+
+                    )
+                    TextField(
+                        value = cur_name,
+                        onValueChange = {
+                            cur_name=it
+                        },
+                        placeholder = {Text("Enter Your Name")},
+                        modifier=Modifier.padding(4.dp)
+                    )
+                }
+                Row(){
+                    Text(
+                        text="Password:",
+                        modifier=Modifier.padding(4.dp),
+                        color=colorResource(R.color.dark_gold)
+                    )
+                    TextField(
+                        value = cur_password,
+                        onValueChange = { cur_password = it },
+                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        placeholder = {Text("Enter Your Password")},
+                        trailingIcon = {
+                            val image = if (passwordVisible) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(imageVector = image, contentDescription = null)
+                            }
+                        },
+                        modifier=Modifier.padding(4.dp)
+                    )
+                }
+                Button(onClick = {
+                    ondismiss()
+                    val prefs=context.getSharedPreferences(shared_pref_filename, Context.MODE_PRIVATE)
+                    val edit=prefs.edit()
+                    edit.putString("player_name",cur_name)
+                    edit.putString("player_password",cur_password)
+                    edit.apply()
+                },
+                    colors= ButtonDefaults.buttonColors(colorResource(R.color.baby_blue))
+                ) {
+                    Text("Save")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun LeaderboardCard(rank:Int,leaderboard: LeaderboardGet,cur_player_name:String){
+    Card(
+        elevation = CardDefaults.cardElevation(16.dp),
+        colors = CardDefaults.cardColors(containerColor =  colorResource(R.color.baby_blue))
+    )
+    {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(8.dp)) {
+            Text(
+                text = "Rank $rank",
+                color=colorResource(R.color.dark_gold),
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = if(leaderboard.name==cur_player_name) "You" else "Name: ${leaderboard.name}",
+                color = colorResource(R.color.charcoal),
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Bullets Shot: ${leaderboard.score}",
+                color=colorResource(R.color.deep_purple),
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Date,Time: ${leaderboard.created_at}",
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
 fun LoadingScreen(gameViewModel: GameViewModel,onloadcomplete:()->Unit,onnavigaterestart:() ->Unit){
     val fetchdummy =0
     val context=LocalContext.current
@@ -451,6 +639,7 @@ fun LoadingScreen(gameViewModel: GameViewModel,onloadcomplete:()->Unit,onnavigat
             if(gameViewModel.fetchalldata!!.isCancelled==false && gameViewModel.error_msg==""){
                 Log.d("apisuccess","loading screen complete, going to main screen")
                 total_progress=1f
+                gameViewModel.GetPlayerName(context=context)
                 onloadcomplete()
             }
             else{
@@ -472,6 +661,9 @@ fun LoadingScreen(gameViewModel: GameViewModel,onloadcomplete:()->Unit,onnavigat
             total_progress+=if(gameViewModel.error_msg=="") 1f/gameViewModel.all_jobs.size else 0f
         }
         gameViewModel.fetchmushroomlayoutjob?.invokeOnCompletion {
+            total_progress+=if(gameViewModel.error_msg=="") 1f/gameViewModel.all_jobs.size else 0f
+        }
+        gameViewModel.fetchleaderboardjob!!.invokeOnCompletion {
             total_progress+=if(gameViewModel.error_msg=="") 1f/gameViewModel.all_jobs.size else 0f
         }
     }
@@ -521,7 +713,7 @@ fun LoadingScreen(gameViewModel: GameViewModel,onloadcomplete:()->Unit,onnavigat
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(24.dp)
-                        .padding(start=30.dp,end=30.dp)
+                        .padding(start = 30.dp, end = 30.dp)
                         .clip(RoundedCornerShape(100.dp)),
                     color = colorResource(R.color.little_dark_purple),
                     trackColor = Color.Gray,
