@@ -1,10 +1,14 @@
 package com.example.arcadecrawler
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
 import android.media.MediaPlayer
 import android.media.SoundPool
 import android.provider.MediaStore.Audio.Media
 import android.util.Log
+import androidx.annotation.OptIn
 import androidx.annotation.Px
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -13,15 +17,44 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.max
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.LoopingMediaSource
+import androidx.media3.exoplayer.source.ProgressiveMediaSource
+import coil.decode.BitmapFactoryDecoder
+import com.caverock.androidsvg.SVG
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import okio.buffer
+import okio.sink
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.io.File
+import java.io.FileOutputStream
+import java.net.HttpURLConnection
+import java.net.URL
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
@@ -104,6 +137,112 @@ class GameViewModel: ViewModel() {
     var islost by mutableStateOf(false)
     var paused by mutableStateOf(false)
 
+    var fetchalldata: Job?=null
+    var fetchbgimagejob: Deferred<Unit>?=null
+    var fetchbgaudiojob: Deferred<Unit>?=null
+    var fetchmushroomlayoutjob:Deferred<Unit>?=null
+    var fetchrandomcolorjob:Deferred<Unit>?=null
+    var fetchskinsjob:Deferred<Unit>?=null
+    var all_jobs=listOf(fetchbgimagejob,fetchbgaudiojob,fetchmushroomlayoutjob,fetchrandomcolorjob,fetchskinsjob)
+
+    var random_color by mutableStateOf(Color.Green)
+
+    var bg_bitmap :Bitmap?=null
+    var normal_mushroom_bitmap :ImageBitmap?=null
+    var poison_mushroom_bitmap:ImageBitmap?=null
+    var gun_bitmap :ImageBitmap?=null
+    var scorpion_bitmap :ImageBitmap?=null
+
+    lateinit var bg_audio_file:File
+    var error_msg=""
+
+    fun FetchAllResources(context: Context){
+        fetchalldata=viewModelScope.launch {
+             coroutineScope {
+                 fetchbgaudiojob=async(Dispatchers.IO) {FetchBgAudio(context=context) }
+                 fetchbgimagejob= async(Dispatchers.IO) { FetchBgImage() }
+                 fetchrandomcolorjob= async(Dispatchers.IO) { FetchRandomColor() }
+                 fetchskinsjob= async(Dispatchers.IO) { FetchSkins() }
+                 fetchmushroomlayoutjob= async(Dispatchers.IO) { FetchMushroomLayout() }
+             }
+
+            fetchbgimagejob!!.await()
+            Log.d("apisuccess","fetched bg image,${fetchbgimagejob!!.isCancelled}")
+            fetchrandomcolorjob!!.await()
+            Log.d("apisuccess","fetched random color,${fetchrandomcolorjob!!.isCancelled}")
+            fetchskinsjob!!.await()
+            Log.d("apisuccess","fetched skins")
+            fetchmushroomlayoutjob!!.await()
+            Log.d("apisuccess","fetched mushroom layout")
+            fetchbgaudiojob!!.await()
+            Log.d("apisuccess","fetched audio")
+
+        }
+    }
+    suspend fun FetchRandomColor(){
+        try{
+            val res=api.GetRandomColor()
+            val rand=GetColorByStringHex(res.color)
+            random_color=rand
+        }
+        catch (e:Exception){
+            Log.d("apierror","Could not Load Color")
+            error_msg+="\nCould not Load Color"
+
+        }
+        Log.d("randomcolor","color=$random_color.")
+        //FetchRandomColor()
+    }
+    suspend fun FetchBgImage(){
+        try{
+            val response=api.GetLoadingScreenImage()
+            bg_bitmap=BitmapFactory.decodeStream(response.byteStream())
+        }
+        catch (e:Exception){
+            Log.d("apierror","Could not Load Background Image")
+            error_msg+="\nCould not Load Background Image"
+        }
+    }
+    suspend fun FetchBgAudio(context: Context){
+        bg_audio_file = File(context.filesDir,"bg_music.mp3")
+        bg_audio_file.createNewFile()
+        FileOutputStream(bg_audio_file).channel.truncate(0).close()
+        try {
+            val inputStream = api.GetBackgroundMusic().byteStream()
+            val outputstream = bg_audio_file.outputStream()
+            inputStream.use { input ->
+                outputstream.use { output ->
+                    input.copyTo(output)
+                }
+            }
+        }
+        catch (e: Exception) {
+            Log.d("apierror", "Could not Load Background Music")
+            error_msg += "\nCould not Load Background Music"
+        }
+    }
+    suspend fun FetchSkins(){
+        try{
+            val response=api.GetSkins()
+            normal_mushroom_bitmap=GetImageBitmapByUrlSvg(response.mushrooms[0])
+            poison_mushroom_bitmap=GetImageBitmapByUrlSvg(response.mushrooms[1])
+            gun_bitmap=GetImageBitmapByUrlSvg(response.guns[0])
+            scorpion_bitmap=GetImageBitmapByUrlSvg(response.scorpions[0])
+        }
+        catch (e:Exception){
+            error_msg+="\nCould not Load Skins"
+            Log.d("apierror","Could not Load Skins")
+        }
+    }
+    suspend fun FetchMushroomLayout(){
+        try{
+            val response=api.GetMushroomLayout()
+
+        }
+        catch (e:Exception){
+            error_msg+="\nCould not Load Mushroom coordinates"
+        }
+    }
 
     fun UpdateGunPosition(newOffset: Offset) {
         gun_position = newOffset
@@ -714,12 +853,6 @@ class GameViewModel: ViewModel() {
             }
             this.mushroomwidth=mushroomwidth
             this.mushroomheight=mushroomheight
-//            mushroom_list.add(Mushroom(id=cur_mushroom_id,
-//                mushroomType=mushroomType,
-//                mushroom_position = Offset(randomx,randomy),
-//                bitmap_width = mushroomwidth,
-//                bitmap_height = mushroomheight))
-//            IncrementMushroomId()
             AddMushroom(
                 offset = Offset(randomx,randomy),
                 mushroomType=mushroomType,
@@ -751,9 +884,18 @@ class GameViewModel: ViewModel() {
         //lst.reverse()
     }
 
+    @OptIn(UnstableApi::class)
     fun SetMusicPlayers(context:Context){
-        bgplayer=MediaPlayer.create(context,R.raw.bgmusic)
-
+        //bgplayer=MediaPlayer.create(context,R.raw.bgmusic)
+        bgplayer = MediaPlayer().apply {
+            setDataSource(bg_audio_file.absolutePath)
+            isLooping = true
+            prepareAsync()
+            setOnCompletionListener { mp ->
+                mp.seekTo(0)
+                mp.start()
+            }
+        }
         val gunshotid=soundPool.load(context,R.raw.gunsound,1)
         val btnplayerid=soundPool.load(context,R.raw.buttonclick,1)
         all_short_sounds["gunshot"]=gunshotid
@@ -763,12 +905,11 @@ class GameViewModel: ViewModel() {
     fun IsBgPlayerInitialized():Boolean{
         return bgplayer!=null
     }
-    fun StartMusic(){
+    fun StartBgMusic(){
         if(bgplayer!=null && !bgplayer!!.isPlaying)
         {
-            bgplayer!!.start()
             bgplayer!!.setVolume(cur_volume,cur_volume)
-            bgplayer!!.isLooping=true
+            bgplayer!!.start()
         }
     }
     fun PauseMusic(){
@@ -849,9 +990,31 @@ class GameViewModel: ViewModel() {
         return newoff
     }
 
+    fun GetColorByStringHex(color:String):Color{
+        return Color(android.graphics.Color.parseColor(color))
+    }
+    suspend fun GetImageBitmapByUrlSvg(url:String): ImageBitmap? = withContext(Dispatchers.IO){
+        try {
+            val stream = URL(url).openStream()
+            val svg = SVG.getFromInputStream(stream)
+
+            val bitmap = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888)//TODO change this 64 to defualt value
+            val canvas = Canvas(bitmap)
+            svg.setDocumentWidth(bitmap.width.toFloat())
+            svg.setDocumentHeight(bitmap.height.toFloat())
+            svg.renderToCanvas(canvas)
+
+            bitmap.asImageBitmap()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
     override fun onCleared() {
         super.onCleared()
         soundPool.release()
+        bgplayer?.release()
+        //bg_audio_file.delete()
     }
 
 }

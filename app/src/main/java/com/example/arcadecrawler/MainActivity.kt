@@ -1,11 +1,15 @@
 package com.example.arcadecrawler
 
+import android.R.attr.onClick
 import android.app.Activity
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.icu.number.NumberFormatter.UnitWidth
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.ProgressBar
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -36,10 +40,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -49,7 +55,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -65,6 +73,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -74,11 +83,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHost
@@ -87,9 +98,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.arcadecrawler.ui.theme.ArcadeCrawlerTheme
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.runBlocking
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import kotlin.coroutines.Continuation
 
 class MainActivity : ComponentActivity() {
+
     private val gameViewModel:GameViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -114,9 +132,9 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             ArcadeCrawlerTheme {
-                Box(modifier=Modifier.fillMaxSize()){
-                    StartGame(gameViewModel=gameViewModel)
-                }
+                Box(modifier = Modifier.fillMaxSize().background(color = Color.Transparent)) {
+                        StartGame(gameViewModel = gameViewModel)
+                    }
             }
         }
     }
@@ -132,8 +150,21 @@ class MainActivity : ComponentActivity() {
 }
 @Composable
 fun StartGame(gameViewModel: GameViewModel, navController: NavHostController = rememberNavController()){
+    //Log.d("apierror","${gameViewModel.fetchalldata?.isActive}")
+    NavHost(navController = navController, startDestination = Screens.LOADING.name, modifier = Modifier.fillMaxSize().statusBarsPadding()){
+        composable (Screens.LOADING.name){
+            LoadingScreen(gameViewModel=gameViewModel,
+                onloadcomplete = {
+                    navController.navigateUp()
+                    navController.navigate(Screens.HOME.name)
+                },
+                onnavigaterestart = {
+                    navController.navigateUp()
+                    navController.navigate(Screens.LOADING.name)
+                }
+            )
 
-    NavHost(navController = navController, startDestination = Screens.HOME.name, modifier = Modifier.fillMaxSize().statusBarsPadding()){
+        }
         composable(Screens.HOME.name){
             StartScreen(onsettingclick = {navController.navigate(Screens.SETTINGS.name)},
                 onplayclick = {navController.navigate(Screens.GAME.name)},
@@ -169,17 +200,18 @@ fun StartScreen(onsettingclick:() ->Unit,onplayclick:() ->Unit,gameViewModel: Ga
     SetBrightness(context=context, newbrightness = 0.7f)
     SetPreviousGunMovement(context=context,gameViewModel=gameViewModel)
     SetPreviousGyroSensitivity(context=context,gameViewModel=gameViewModel)
-    if(gameViewModel.bgplayer==null) {
+    if (gameViewModel.bgplayer == null) {
+        Log.d("arcadething", "set up music players")
         gameViewModel.SetMusicPlayers(context = context)
     }
-    Log.d("arcadething","yess")
-    if(gameViewModel.IsBgPlayerInitialized() && !gameViewModel.bgplayer!!.isPlaying) {
-        gameViewModel.StartMusic()
+    if (gameViewModel.IsBgPlayerInitialized() && !gameViewModel.bgplayer!!.isPlaying) {
+        Log.d("arcadething", "started bg music,$")
+        gameViewModel.StartBgMusic()
     }
     SetPreviousBgVolume(gameViewModel=gameViewModel,context=context)
     Box(modifier=Modifier.fillMaxSize()){
         Image(
-            painter = painterResource(R.drawable.homescreen),
+            painter= painterResource(R.drawable.homescreen),
             contentDescription = null,
             modifier=Modifier.fillMaxSize().align(Alignment.Center),
             contentScale = ContentScale.FillBounds
@@ -305,6 +337,7 @@ fun AboutDialog(ondismiss:() ->Unit,gameViewModel: GameViewModel){
     }
 }
 @OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun SnakeDialog(ondismiss: () -> Unit,onplayclick: () -> Unit,gameViewModel: GameViewModel){
     val items = listOf(1,2,3,4,5,6,7,8,9,10)
@@ -403,6 +436,102 @@ fun SnakeDialog(ondismiss: () -> Unit,onplayclick: () -> Unit,gameViewModel: Gam
         }
     }
 }
+
+@Composable
+fun LoadingScreen(gameViewModel: GameViewModel,onloadcomplete:()->Unit,onnavigaterestart:() ->Unit){
+    val fetchdummy =0
+    val context=LocalContext.current
+    var should_show_errordialog by remember { mutableStateOf(false) }
+    var total_progress by remember { mutableStateOf(0f) }
+    val cur_progress by animateFloatAsState(total_progress)
+    var should_show_bg_img by remember { mutableStateOf(false) }
+    LaunchedEffect(fetchdummy) {
+        gameViewModel.FetchAllResources(context=context)
+        gameViewModel.fetchalldata?.invokeOnCompletion {
+            if(gameViewModel.fetchalldata!!.isCancelled==false && gameViewModel.error_msg==""){
+                Log.d("apisuccess","loading screen complete, going to main screen")
+                total_progress=1f
+                onloadcomplete()
+            }
+            else{
+                should_show_errordialog=true
+            }
+        }
+        //add gameviewmodel.fetchxxx to each if removed try catch for each FetchXXX
+        gameViewModel.fetchbgaudiojob?.invokeOnCompletion {
+            total_progress+=if(gameViewModel.error_msg=="") 1f/gameViewModel.all_jobs.size else 0f
+        }
+        gameViewModel.fetchbgimagejob?.invokeOnCompletion {
+            total_progress+=if(gameViewModel.error_msg=="") 1f/gameViewModel.all_jobs.size else 0f
+            should_show_bg_img=(gameViewModel.error_msg=="")
+        }
+        gameViewModel.fetchskinsjob?.invokeOnCompletion {
+            total_progress+=if(gameViewModel.error_msg=="") 1f/gameViewModel.all_jobs.size else 0f
+        }
+        gameViewModel.fetchrandomcolorjob?.invokeOnCompletion {
+            total_progress+=if(gameViewModel.error_msg=="") 1f/gameViewModel.all_jobs.size else 0f
+        }
+        gameViewModel.fetchmushroomlayoutjob?.invokeOnCompletion {
+            total_progress+=if(gameViewModel.error_msg=="") 1f/gameViewModel.all_jobs.size else 0f
+        }
+    }
+    if(should_show_errordialog){
+        AlertDialog(
+            onDismissRequest = {},
+            confirmButton = {
+                TextButton(onClick = {
+                    gameViewModel.error_msg=""
+                    onnavigaterestart()}) {
+                    Text("Retry") }
+                            },
+            title = {Text(
+                text="Error",
+                textAlign = TextAlign.Center)},
+            text = {Text("Could not load game, Please check your internet connection\n${gameViewModel.error_msg}")}
+            )
+    }
+        Box(modifier = Modifier.fillMaxSize()){
+            if(should_show_bg_img){
+                Image(
+                    bitmap = gameViewModel.bg_bitmap!!.asImageBitmap(),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .fillMaxSize(),
+                    contentScale = ContentScale.FillBounds
+                )
+            }
+            Text(
+                text = "Loading...",
+                textAlign = TextAlign.Center,
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(bottom = 100.dp)
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 50.dp), // give space at the bottom
+                contentAlignment = Alignment.BottomCenter // centers the bar horizontally at the bottom
+            ) {
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(24.dp)
+                        .padding(start=30.dp,end=30.dp)
+                        .clip(RoundedCornerShape(100.dp)),
+                    color = colorResource(R.color.little_dark_purple),
+                    trackColor = Color.Gray,
+                    progress = cur_progress
+                )
+            }
+
+    }
+}
+
 fun SetBrightness(context: Context,newbrightness:Float){
     val activity = context as Activity
     val layoutParams = activity.window.attributes

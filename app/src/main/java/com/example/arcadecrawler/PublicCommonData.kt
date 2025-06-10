@@ -7,9 +7,13 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.dp
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.create
 
 enum class Screens{
     HOME,
+    LOADING,
     GAME,
     SETTINGS
 }
@@ -42,6 +46,7 @@ val speed_options = listOf(Speed.SLOW,Speed.MEDIUM,Speed.FAST)
 val shared_pref_filename="ArcadeCrawler"
 val all_movements=Movement.values().toList()
 
+
 data class Joystick(var thumbpositon:Offset=Offset.Zero,var outerradius:Float=0f,var innerradius:Float=0f)
 data class Bullet(val id:Int,var bullet_position:MutableState<Offset> = mutableStateOf(Offset.Zero),var bitmap_width:Float,var bitmap_height:Float)
 data class Mushroom(val id:Int,var mushroomType: MushroomType,var mushroom_position:Offset,var health:Int=5,var bitmap_width: Float,var bitmap_height: Float)
@@ -65,4 +70,12 @@ data class Scorpion(
     val bitmap_width: Float,
     val bitmap_height: Float
 )
-
+data class RandomColor(val color:String)
+data class Skins(
+    val mushrooms:List<String>,
+    val guns:List<String>,
+    val scorpions:List<String>
+)
+data class MushroomLayout(
+    val layout:List<List<Float>>
+)

@@ -52,6 +52,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.tools.core)
     implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.androidx.media3.datasource)
+    implementation(libs.androidx.media3.exoplayer)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -61,5 +63,11 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.lifecycleViewmodelCompose)
     implementation(libs.gson)
-
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.9.3") // For logging requests
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("com.caverock:androidsvg:1.4")
+    implementation("com.google.android.exoplayer:exoplayer:2.19.1")
+    implementation ("com.squareup.okio:okio:3.2.0")
 }

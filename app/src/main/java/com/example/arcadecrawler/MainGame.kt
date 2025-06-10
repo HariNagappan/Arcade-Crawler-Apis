@@ -2,6 +2,8 @@ package com.example.arcadecrawler
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -51,8 +53,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.draw
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.input.pointer.pointerInput
@@ -138,15 +144,15 @@ fun MainCanvas(gameViewModel: GameViewModel,modifier:Modifier){
     val localdensity= LocalDensity.current
     val context= LocalContext.current
 
-    val gunbitmap= ImageBitmap.imageResource(R.drawable.gun)
+    val gunbitmap= gameViewModel.gun_bitmap!!//ImageBitmap.imageResource(R.drawable.gun)
     val bulletfirebitmap=ImageBitmap.imageResource(R.drawable.bulletfire)
     val bulletbitap=ImageBitmap.imageResource(R.drawable.bullet)
-    val mushroombitmap=ImageBitmap.imageResource(R.drawable.mushroom)
-    val poisonmushroombitmap=ImageBitmap.imageResource(R.drawable.poisonmushroom)
+    val mushroombitmap=gameViewModel.normal_mushroom_bitmap!!//ImageBitmap.imageResource(R.drawable.mushroom)
+    val poisonmushroombitmap=gameViewModel.poison_mushroom_bitmap!!//ImageBitmap.imageResource(R.drawable.poisonmushroom)
     val snakeheadbitmap=ImageBitmap.imageResource(R.drawable.snakehead)
     val snakenodebitmap=ImageBitmap.imageResource(R.drawable.snake)
     val spiderbitmap=ImageBitmap.imageResource(R.drawable.spider)
-    val scorpionbitmap=ImageBitmap.imageResource(R.drawable.scorpion)
+    val scorpionbitmap=gameViewModel.scorpion_bitmap!!//ImageBitmap.imageResource(R.drawable.scorpion)
 
     var joystickcenter = with(localdensity){Offset(320.dp.toPx(),660.dp.toPx())}
     var thumboffset by remember{mutableStateOf(joystickcenter)}
@@ -164,6 +170,7 @@ fun MainCanvas(gameViewModel: GameViewModel,modifier:Modifier){
     val snakelist=gameViewModel.snake_list
 
     val bgcolor= colorResource(R.color.ivory)
+
 
 
     with(localdensity){
@@ -200,6 +207,7 @@ fun MainCanvas(gameViewModel: GameViewModel,modifier:Modifier){
                 movement = Movement.RIGHT,
                 nodeheight = snakenodebitmap.height.toFloat()
             )
+            gameViewModel.FetchRandomColor()
             gameViewModel.gunbitmapwidth=gunbitmap.width.toFloat()
             gameViewModel.gunbitmapheight=gunbitmap.height.toFloat()
         }
@@ -323,11 +331,15 @@ fun MainCanvas(gameViewModel: GameViewModel,modifier:Modifier){
                         degrees = if (node.movement == Movement.RIGHT) 180f else if(node.movement==Movement.LEFT) 0f else -90f,
                         pivot = Offset(node.node_position.value.x + snake.bitmap_width/2f,node.node_position.value.y + snake.bitmap_height/2f),
                     ) {
-                        drawImage(image = snakeheadbitmap, topLeft = node.node_position.value)
+                        drawImage(image = snakeheadbitmap,
+                            topLeft = node.node_position.value,
+                            colorFilter = ColorFilter.tint(gameViewModel.random_color, blendMode = BlendMode.SrcAtop))
                     }
                 }
                 else{
-                    drawImage(image = snakenodebitmap, topLeft = node.node_position.value)
+                    drawImage(image = snakenodebitmap,
+                        topLeft = node.node_position.value,
+                        colorFilter = ColorFilter.tint(gameViewModel.random_color, blendMode = BlendMode.SrcAtop))
                 }
             }
         }
@@ -363,8 +375,8 @@ fun MainCanvas(gameViewModel: GameViewModel,modifier:Modifier){
             )
         }
         .size(
-            with(localdensity){bulletfirebitmap.width.toDp()},
-            with(localdensity){bulletfirebitmap.height.toDp()}
+            with(localdensity){bulletfirebitmap.width.toDp()+30.dp},
+            with(localdensity){bulletfirebitmap.height.toDp()+30.dp}
         )
         .clip(CircleShape)
         .background(Color.Transparent) // makes it hit-testable
@@ -419,7 +431,6 @@ fun PauseDialog(onnavigateup: () -> Unit,onreset:() ->Unit,onresume:()->Unit,gam
             .size(300.dp,220.dp)
             .border(width=4.dp,color=Color.Black,shape=RoundedCornerShape(32.dp))
             .background(color= colorResource(R.color.blueish),shape=RoundedCornerShape(32.dp))) {
-
             Text(
                 text = "PAUSED",
                 fontSize = 24.sp,
@@ -712,12 +723,8 @@ fun GetRandomMovementBasedOnIdx(idx:Int):Movement{//modifiy for larger lists
 @Composable
 fun GyroGun(gameViewModel: GameViewModel) {
     val context = LocalContext.current
-    val sensorManager = remember {
-        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-    }
-    val gyroscope = remember {
-        sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
-    }
+    val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+    val gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
 
     var deltaX by remember { mutableStateOf(0f) }
     var deltaY by remember { mutableStateOf(0f) }
@@ -743,10 +750,8 @@ fun GyroGun(gameViewModel: GameViewModel) {
                         gameViewModel.gyrogunoffsety
                     )
                 )
-
             }
             override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
-
         }
         Log.d("boundaryvalues","${gameViewModel.gun_leastx},${gameViewModel.gun_maxx},${gameViewModel.gun_leasty},${gameViewModel.gun_maxy}")
         sensorManager.registerListener(listener, gyroscope, SensorManager.SENSOR_DELAY_GAME)
@@ -754,5 +759,4 @@ fun GyroGun(gameViewModel: GameViewModel) {
             sensorManager.unregisterListener(listener)
         }
     }
-
 }
