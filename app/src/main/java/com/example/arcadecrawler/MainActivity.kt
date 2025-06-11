@@ -1,5 +1,7 @@
 package com.example.arcadecrawler
 
+import android.R.attr.fontFamily
+import android.R.attr.fontWeight
 import android.app.Activity
 import android.content.Context
 import android.os.Bundle
@@ -381,17 +383,11 @@ fun SnakeDialog(ondismiss: () -> Unit,onplayclick: () -> Unit,gameViewModel: Gam
     var selectedItem by remember { mutableStateOf(sharedprefs.getInt("selecteditem",1).toString()) }
 
     Dialog(onDismissRequest = {ondismiss()}) {
-        Box (
-            modifier=Modifier
-                .size(300.dp, 250.dp)
-                .background(
-                    shape = RoundedCornerShape(16.dp),
-                    color = colorResource(R.color.blueish)
-                )){
-            Column (verticalArrangement = Arrangement.SpaceBetween,horizontalAlignment=Alignment.CenterHorizontally,modifier=Modifier
-                .align(Alignment.Center)
-                .fillMaxSize()
-                .padding(8.dp)){
+        Card (
+            colors= CardDefaults.cardColors(colorResource(R.color.blueish))
+        ){
+            Column (verticalArrangement = Arrangement.spacedBy(8.dp),horizontalAlignment=Alignment.CenterHorizontally,modifier=Modifier
+                .padding(4.dp)){
                 Box(modifier=Modifier.fillMaxWidth()) {
                     Text(
                         text = "Snakes",
@@ -424,7 +420,9 @@ fun SnakeDialog(ondismiss: () -> Unit,onplayclick: () -> Unit,gameViewModel: Gam
                         value = selectedItem,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Select Number of Snakes") },
+                        label = { Text(
+                            text="Select Number of Snakes",
+                            fontFamily = FontFamily(Font(R.font.arcadebody))) },
                         trailingIcon = {
                             ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                         },
@@ -441,7 +439,9 @@ fun SnakeDialog(ondismiss: () -> Unit,onplayclick: () -> Unit,gameViewModel: Gam
                     ) {
                         items.forEach { element ->
                             DropdownMenuItem(
-                                text = { Text(element.toString()) },
+                                text = { Text(
+                                    text=element.toString(),
+                                    fontFamily = FontFamily(Font(R.font.arcadebody))) },
                                 onClick = {
                                     gameViewModel.PlayButtonClick()
                                     selectedItem = element.toString()
@@ -527,23 +527,30 @@ fun PlayerInfoDialog(ondismiss: () -> Unit,gameViewModel: GameViewModel){
     var cur_password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     val context=LocalContext.current
-    Dialog(onDismissRequest = {ondismiss()}){
+    Dialog(onDismissRequest = {}){
         Card(
             colors = CardDefaults.cardColors(colorResource(R.color.blueish))
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text="Player Info",
-                    color=colorResource(R.color.little_dark_purple)
+                    fontWeight= FontWeight.Bold,
+                    fontSize = 24.sp,
+                    color=colorResource(R.color.little_dark_purple),
+                    fontFamily = FontFamily(Font(R.font.arcade))
                 )
                 Text(
                     text="Please tell us about yourself",
+                    fontFamily = FontFamily(Font(R.font.arcadebody)),
+                    fontWeight= FontWeight.Bold,
                     color=colorResource(R.color.charcoal)
                 )
-                Row(){
+                Row(verticalAlignment = Alignment.CenterVertically){
                     Text(
                         text="Your Name:",
                         modifier=Modifier.padding(4.dp),
+                        fontFamily = FontFamily(Font(R.font.arcadebody)),
+                        fontWeight= FontWeight.Bold,
                         color=colorResource(R.color.dark_gold)
 
                     )
@@ -552,14 +559,18 @@ fun PlayerInfoDialog(ondismiss: () -> Unit,gameViewModel: GameViewModel){
                         onValueChange = {
                             cur_name=it
                         },
-                        placeholder = {Text("Enter Your Name")},
+                        placeholder = {Text(
+                            text="Enter Name",
+                            fontFamily = FontFamily(Font(R.font.arcadebody)))},
                         modifier=Modifier.padding(4.dp)
                     )
                 }
-                Row(){
+                Row(verticalAlignment = Alignment.CenterVertically){
                     Text(
                         text="Password:",
                         modifier=Modifier.padding(4.dp),
+                        fontFamily = FontFamily(Font(R.font.arcadebody)),
+                        fontWeight= FontWeight.Bold,
                         color=colorResource(R.color.dark_gold)
                     )
                     TextField(
@@ -567,7 +578,9 @@ fun PlayerInfoDialog(ondismiss: () -> Unit,gameViewModel: GameViewModel){
                         onValueChange = { cur_password = it },
                         visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        placeholder = {Text("Enter Your Password")},
+                        placeholder = {Text(
+                            text="Enter Password",
+                            fontFamily = FontFamily(Font(R.font.arcadebody)))},
                         trailingIcon = {
                             val image = if (passwordVisible) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -586,9 +599,14 @@ fun PlayerInfoDialog(ondismiss: () -> Unit,gameViewModel: GameViewModel){
                     edit.apply()
                     gameViewModel.GetPlayerName(context=context)
                 },
-                    colors= ButtonDefaults.buttonColors(colorResource(R.color.baby_blue))
+                    colors= ButtonDefaults.buttonColors(colorResource(R.color.green))
                 ) {
-                    Text("Save")
+                    Text(
+                        text="Save",
+                        fontWeight= FontWeight.Bold,
+                        fontSize = 16.sp,
+                        fontFamily = FontFamily(Font(R.font.arcadebody))
+                        )
                 }
             }
         }
@@ -606,20 +624,24 @@ fun LeaderboardCard(rank:Int,leaderboard: LeaderboardGet,cur_player_name:String)
             Text(
                 text = "Rank $rank",
                 color=colorResource(R.color.dark_gold),
+                fontFamily = FontFamily(Font(R.font.arcade)),
                 fontWeight = FontWeight.Bold
             )
             Text(
                 text = if(leaderboard.name==cur_player_name) "You" else "Name: ${leaderboard.name}",
                 color = colorResource(R.color.charcoal),
+                fontFamily = FontFamily(Font(R.font.arcadebody)),
                 fontWeight = FontWeight.Bold
             )
             Text(
                 text = "Bullets Shot: ${leaderboard.score}",
                 color=colorResource(R.color.deep_purple),
+                fontFamily = FontFamily(Font(R.font.arcadebody)),
                 fontWeight = FontWeight.Bold
             )
             Text(
                 text = "Date,Time: ${leaderboard.created_at}",
+                fontFamily = FontFamily(Font(R.font.arcadebody)),
                 fontWeight = FontWeight.Bold
             )
         }
@@ -647,25 +669,32 @@ fun LoadingScreen(gameViewModel: GameViewModel,onloadcomplete:()->Unit,onnavigat
                 should_show_errordialog=true
             }
         }
+
         //add gameviewmodel.fetchxxx to each if removed try catch for each FetchXXX
-        gameViewModel.fetchbgaudiojob?.invokeOnCompletion {
-            total_progress+=if(gameViewModel.error_msg=="") 1f/gameViewModel.all_jobs.size else 0f
-        }
+
         gameViewModel.fetchbgimagejob?.invokeOnCompletion {
             total_progress+=if(gameViewModel.error_msg=="") 1f/gameViewModel.all_jobs.size else 0f
+            //cur_loading="Fetching Random Color"
             should_show_bg_img=(gameViewModel.error_msg=="")
         }
-        gameViewModel.fetchskinsjob?.invokeOnCompletion {
+        gameViewModel.fetchrandomcolorjob?.invokeOnCompletion {
+            //cur_loading="Fetching Skins"
             total_progress+=if(gameViewModel.error_msg=="") 1f/gameViewModel.all_jobs.size else 0f
         }
-        gameViewModel.fetchrandomcolorjob?.invokeOnCompletion {
+        gameViewModel.fetchskinsjob?.invokeOnCompletion {
+            //cur_loading="Fetching Mushroom Layout"
             total_progress+=if(gameViewModel.error_msg=="") 1f/gameViewModel.all_jobs.size else 0f
         }
         gameViewModel.fetchmushroomlayoutjob?.invokeOnCompletion {
+            //cur_loading="Fetching Leaderboard"
             total_progress+=if(gameViewModel.error_msg=="") 1f/gameViewModel.all_jobs.size else 0f
         }
         gameViewModel.fetchleaderboardjob!!.invokeOnCompletion {
+            //cur_loading="Fetching Background Music"
             total_progress+=if(gameViewModel.error_msg=="") 1f/gameViewModel.all_jobs.size else 0f
+        }
+        gameViewModel.fetchbgaudiojob?.invokeOnCompletion {
+            total_progress += if (gameViewModel.error_msg == "") 1f / gameViewModel.all_jobs.size else 0f
         }
     }
     if(should_show_errordialog){
@@ -679,8 +708,11 @@ fun LoadingScreen(gameViewModel: GameViewModel,onloadcomplete:()->Unit,onnavigat
                             },
             title = {Text(
                 text="Error",
+                fontFamily = FontFamily(Font(R.font.arcade)),
                 textAlign = TextAlign.Center)},
-            text = {Text("Could not load game, Please check your internet connection\n${gameViewModel.error_msg}")}
+            text = {Text(
+                text="Could not load game, Please check your internet connection\n${gameViewModel.error_msg}",
+                fontFamily = FontFamily(Font(R.font.arcadebody)))}
             )
     }
         Box(modifier = Modifier.fillMaxSize()){
@@ -697,7 +729,8 @@ fun LoadingScreen(gameViewModel: GameViewModel,onloadcomplete:()->Unit,onnavigat
             Text(
                 text = "Loading...",
                 textAlign = TextAlign.Center,
-                fontSize = 32.sp,
+                fontSize = 20.sp,
+                fontFamily = FontFamily(Font(R.font.arcade)),
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)

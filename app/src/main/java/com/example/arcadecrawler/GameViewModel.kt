@@ -159,6 +159,7 @@ class GameViewModel: ViewModel() {
     var relative_mushroom_layout =mutableListOf<List<Float>>()
     var cur_player_name:String=""
     var cur_player_password:String=""
+    var cur_loading by mutableStateOf("")
 
     lateinit var bg_audio_file:File
     var error_msg=""
@@ -166,28 +167,36 @@ class GameViewModel: ViewModel() {
     fun FetchAllResources(context: Context){
         fetchalldata=viewModelScope.launch {
              coroutineScope {
-                 fetchbgaudiojob=async(Dispatchers.IO) {FetchBgAudio(context=context) }
                  fetchbgimagejob= async(Dispatchers.IO) { FetchBgImage() }
                  fetchrandomcolorjob= async(Dispatchers.IO) { FetchRandomColor() }
                  fetchskinsjob= async(Dispatchers.IO) { FetchSkins() }
                  fetchmushroomlayoutjob= async(Dispatchers.IO) { FetchMushroomLayout() }
-                fetchleaderboardjob =async (Dispatchers.IO){FetchLeaderboard()}
+                 fetchleaderboardjob =async (Dispatchers.IO){FetchLeaderboard()}
+                 fetchbgaudiojob=async(Dispatchers.IO) {FetchBgAudio(context=context) }
              }
-
+            cur_loading="Fetching Background Image"
             fetchbgimagejob!!.await()
             Log.d("apisuccess","fetched bg image,${fetchbgimagejob!!.isCancelled}")
+
+            cur_loading="Fetching Random Color"
             fetchrandomcolorjob!!.await()
             Log.d("apisuccess","fetched random color,${fetchrandomcolorjob!!.isCancelled}")
+
+            cur_loading="Fetching Skins"
             fetchskinsjob!!.await()
             Log.d("apisuccess","fetched skins")
+
+            cur_loading="Fetching Mushroom Layout"
             fetchmushroomlayoutjob!!.await()
             Log.d("apisuccess","fetched mushroom layout,$relative_mushroom_layout")
+
+            cur_loading="Fetching Leaderboard"
             fetchleaderboardjob!!.await()
             Log.d("apisuccess","fetched leaderboard,$leaderboard")
+
+            cur_loading="Fetching Background Music"
             fetchbgaudiojob!!.await()
             Log.d("apisuccess","fetched audio")
-
-
         }
     }
     suspend fun FetchRandomColor(){
@@ -308,6 +317,7 @@ class GameViewModel: ViewModel() {
         cur_player_name=prefs.getString("player_name","")?:""
         cur_player_password=prefs.getString("player_password","")?:""
     }
+
 
     fun UpdateGunPosition(newOffset: Offset) {
         gun_position = newOffset

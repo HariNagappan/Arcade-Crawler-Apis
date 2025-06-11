@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.create
+import kotlin.time.Duration
 
 enum class Screens{
     HOME,
@@ -89,4 +90,12 @@ data class LeaderboardPost(
     val password:String,
     val score:Int
 )
-
+data class PowerUpPost(
+    val centipedeDestroyed: Boolean
+)
+data class PowerUpGet(
+    val id: Int,
+    val name: String,
+    val description: String,
+    val duration: Int
+)

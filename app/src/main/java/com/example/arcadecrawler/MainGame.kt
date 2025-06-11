@@ -434,6 +434,7 @@ fun BlackWhiteGrid(cols:Int=20,modifier:Modifier){
 fun PauseDialog(onnavigateup: () -> Unit,onreset:() ->Unit,onresume:()->Unit,gameViewModel: GameViewModel){
     var bgsliderpos by remember { mutableStateOf(gameViewModel.cur_volume) }
     var brightnesssliderpos by remember { mutableStateOf(gameViewModel.cur_brightness) }
+    var gyrosliderpos by remember { mutableStateOf(gameViewModel.gyro_sensitivity) }
     val context=LocalContext.current
     Dialog(onDismissRequest = {
         val prefs= context.getSharedPreferences(
@@ -441,29 +442,33 @@ fun PauseDialog(onnavigateup: () -> Unit,onreset:() ->Unit,onresume:()->Unit,gam
         val edit=prefs.edit()
         edit.putFloat("bgvolume",bgsliderpos)
         edit.putFloat("screenbrightness",brightnesssliderpos)
+        edit.putFloat("gyrosensitvity",gyrosliderpos)
         edit.apply()
         onresume()}){
         Box(modifier=Modifier
-            .size(300.dp,220.dp)
+            //.size(300.dp,220.dp)
             .border(width=4.dp,color=Color.Black,shape=RoundedCornerShape(32.dp))
             .background(color= colorResource(R.color.blueish),shape=RoundedCornerShape(32.dp))) {
-            Text(
-                text = "PAUSED",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily(Font(R.font.arcade)),
-                textAlign = TextAlign.Center,
-                color= colorResource(R.color.dark_gold),
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(8.dp)
-            )
-            Column(horizontalAlignment = Alignment.CenterHorizontally,modifier=Modifier.align(Alignment.Center)) {
-                Row(verticalAlignment = Alignment.CenterVertically,modifier=Modifier.fillMaxWidth().padding(start=4.dp,end=4.dp)) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally,modifier=Modifier.align(Alignment.Center).padding(8.dp)) {
+                Text(
+                    text = "PAUSED",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily(Font(R.font.arcade)),
+                    textAlign = TextAlign.Center,
+                    color = colorResource(R.color.dark_gold),
+                    modifier = Modifier
+                        .padding(8.dp)
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp)
+                ) {
                     Text(
                         text = "Music Sound",
+                        fontFamily = FontFamily(Font(R.font.arcadebody)),
                         textAlign = TextAlign.Center,
-                        color= colorResource(R.color.dark_gray),
+                        color = colorResource(R.color.dark_gray),
                         fontWeight = FontWeight.Bold
                     )
                     Slider(
@@ -480,87 +485,115 @@ fun PauseDialog(onnavigateup: () -> Unit,onreset:() ->Unit,onresume:()->Unit,gam
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "Screen Brightness",
+                        fontFamily = FontFamily(Font(R.font.arcadebody)),
                         textAlign = TextAlign.Center,
-                        color= colorResource(R.color.dark_gray),
+                        color = colorResource(R.color.dark_gray),
                         fontWeight = FontWeight.Bold
                     )
                     Slider(
                         value = brightnesssliderpos,
                         onValueChange = {
                             brightnesssliderpos = it
-                            SetBrightness(context=context, newbrightness = it)
+                            SetBrightness(context = context, newbrightness = it)
                             gameViewModel.SetBrightness(newbrightness = it)
-                                        },
+                        },
                         valueRange = 0.1f..1f,
                         modifier = Modifier
                             .weight(1f)
                     )
                 }
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier=Modifier.align(Alignment.BottomCenter)
-            ) {
-                Image(
-                    painter=painterResource(R.drawable.home),
-                    contentDescription = null,
-                    modifier=Modifier
-                        .padding(8.dp)
-                        .clip(CircleShape)
-                        .clickable {
-                            gameViewModel.PlayButtonClick()
+                if(gameViewModel.isgyro){
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp)
+                    ) {
+                        Text(
+                            text = "Gyro Sensitivity",
+                            fontFamily = FontFamily(Font(R.font.arcadebody)),
+                            textAlign = TextAlign.Center,
+                            color = colorResource(R.color.dark_gray),
+                            fontWeight = FontWeight.Bold
+                        )
+                        Slider(
+                            value = gyrosliderpos,
+                            onValueChange = {
+                                gyrosliderpos = it
+                                gameViewModel.SetGyroSensitivity(it)
+                            },
+                            valueRange = 10f..50f,
+                            modifier = Modifier
+                                .weight(1f)
+                        )
+                    }
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.home),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .clip(CircleShape)
+                            .clickable {
+                                gameViewModel.PlayButtonClick()
+                                val prefs = context.getSharedPreferences(
+                                    shared_pref_filename, Context.MODE_PRIVATE
+                                )
+                                val edit = prefs.edit()
+                                edit.putFloat("bgvolume", bgsliderpos)
+                                edit.putFloat("gyrosensitvity",gyrosliderpos)
+                                edit.putFloat("screenbrightness", brightnesssliderpos)
+                                edit.apply()
+                                onnavigateup()
+                            }
+                    )
+                    Spacer(modifier = Modifier.width(24.dp))
+                    Image(
+                        painter = painterResource(R.drawable.restart),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .clip(CircleShape)
+                            .clickable {
+                                gameViewModel.PlayButtonClick()
 
-                            val prefs= context.getSharedPreferences(
-                                shared_pref_filename, Context.MODE_PRIVATE)
-                            val edit=prefs.edit()
-                            edit.putFloat("bgvolume",bgsliderpos)
-                            edit.putFloat("screenbrightness",brightnesssliderpos)
-                            edit.apply()
+                                val prefs = context.getSharedPreferences(
+                                    shared_pref_filename, Context.MODE_PRIVATE
+                                )
+                                val edit = prefs.edit()
+                                edit.putFloat("bgvolume", bgsliderpos)
+                                edit.putFloat("gyrosensitvity",gyrosliderpos)
+                                edit.putFloat("screenbrightness", brightnesssliderpos)
+                                edit.apply()
 
-                            onnavigateup()
-                        }
-                )
-                Spacer(modifier=Modifier.width(24.dp))
-                Image(
-                    painter=painterResource(R.drawable.restart),
-                    contentDescription = null,
-                    modifier=Modifier
-                        .padding(8.dp)
-                        .clip(CircleShape)
-                        .clickable {
-                            gameViewModel.PlayButtonClick()
+                                onreset()
+                            }
+                    )
+                    Spacer(modifier = Modifier.width(24.dp))
+                    Image(
+                        painter = painterResource(R.drawable.miniplay),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .clip(CircleShape)
+                            .clickable {
+                                gameViewModel.PlayButtonClick()
 
-                            val prefs= context.getSharedPreferences(
-                                shared_pref_filename, Context.MODE_PRIVATE)
-                            val edit=prefs.edit()
-                            edit.putFloat("bgvolume",bgsliderpos)
-                            edit.putFloat("screenbrightness",brightnesssliderpos)
-                            edit.apply()
+                                val prefs = context.getSharedPreferences(
+                                    shared_pref_filename, Context.MODE_PRIVATE
+                                )
+                                val edit = prefs.edit()
+                                edit.putFloat("bgvolume", bgsliderpos)
+                                edit.putFloat("gyrosensitvity",gyrosliderpos)
+                                edit.putFloat("screenbrightness", brightnesssliderpos)
+                                edit.apply()
 
-                            onreset()
-                        }
-                )
-                Spacer(modifier=Modifier.width(24.dp))
-                Image(
-                    painter=painterResource(R.drawable.miniplay),
-                    contentDescription = null,
-                    modifier=Modifier
-                        .padding(8.dp)
-                        .clip(CircleShape)
-                        .clickable {
-                            gameViewModel.PlayButtonClick()
-
-                            val prefs= context.getSharedPreferences(
-                                shared_pref_filename, Context.MODE_PRIVATE)
-                            val edit=prefs.edit()
-                            edit.putFloat("bgvolume",bgsliderpos)
-                            edit.putFloat("screenbrightness",brightnesssliderpos)
-                            edit.apply()
-
-                            onresume()
-                        }
-                )
+                                onresume()
+                            }
+                    )
+                }
             }
         }
     }
@@ -569,15 +602,14 @@ fun PauseDialog(onnavigateup: () -> Unit,onreset:() ->Unit,onresume:()->Unit,gam
 fun WinDialog(ondismiss:() ->Unit,onnavigateup: () -> Unit,onnavigaterestart: () -> Unit,cur_bullet_count:Int,gameViewModel: GameViewModel){
     Dialog(onDismissRequest = {}){
         Box(modifier=Modifier
-            .size(300.dp,240.dp)
+            //.size(300.dp,240.dp)
             .border(width=4.dp,color= colorResource(R.color.dark_gray), shape = RoundedCornerShape(24.dp))
             .background(color= colorResource(R.color.mint), shape = RoundedCornerShape(24.dp)))
         {
             Column(horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement=Arrangement.SpaceBetween,
+                verticalArrangement= Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .fillMaxSize()
                     .padding(16.dp)
                     )
             {
@@ -595,6 +627,7 @@ fun WinDialog(ondismiss:() ->Unit,onnavigateup: () -> Unit,onnavigaterestart: ()
                         Text(
                             text="Bullets Shot",
                             textAlign = TextAlign.Center,
+                            fontFamily = FontFamily(Font(R.font.arcadebody)),
                             color = colorResource(R.color.dark_gold),
                             fontWeight = FontWeight.Bold
                         )
@@ -602,12 +635,14 @@ fun WinDialog(ondismiss:() ->Unit,onnavigateup: () -> Unit,onnavigaterestart: ()
                             text="$cur_bullet_count",
                             fontSize = 40.sp,
                             textAlign = TextAlign.Center,
+                            fontFamily = FontFamily(Font(R.font.arcadebody)),
                             color= colorResource(R.color.dark_green),
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text="Bullets",
                             textAlign = TextAlign.Center,
+                            fontFamily = FontFamily(Font(R.font.arcadebody)),
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -625,7 +660,7 @@ fun WinDialog(ondismiss:() ->Unit,onnavigateup: () -> Unit,onnavigaterestart: ()
                                 onnavigateup()
                             }
                     )
-                    Spacer(modifier=Modifier.width(16.dp))
+                    Spacer(modifier=Modifier.width(32.dp))
                     Image(
                         painter= painterResource(R.drawable.restart),
                         contentDescription = null,
@@ -646,15 +681,13 @@ fun WinDialog(ondismiss:() ->Unit,onnavigateup: () -> Unit,onnavigaterestart: ()
 fun LoseDialog(onnavigateup: () -> Unit, ondismiss:() ->Unit,onnavigaterestart: () -> Unit,cur_bullet_count:Int,gameViewModel: GameViewModel){
     Dialog(onDismissRequest = {}){
         Box(modifier=Modifier
-            .size(300.dp,240.dp)
             .border(width=4.dp,color= colorResource(R.color.dark_gray), shape = RoundedCornerShape(24.dp))
             .background(color= colorResource(R.color.mint), shape = RoundedCornerShape(24.dp)))
         {
             Column(horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement=Arrangement.SpaceBetween,
+                verticalArrangement=Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .fillMaxSize()
                     .padding(16.dp)
             )
             {
@@ -667,23 +700,27 @@ fun LoseDialog(onnavigateup: () -> Unit, ondismiss:() ->Unit,onnavigaterestart: 
                     fontWeight = FontWeight.Bold
                 )
 
-                Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
+                Row(verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center){
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text="Bullet Shot",
                             textAlign = TextAlign.Center,
+                            fontFamily = FontFamily(Font(R.font.arcadebody)),
                             color = colorResource(R.color.dark_gold),
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text="$cur_bullet_count",
                             fontSize = 40.sp,
+                            fontFamily = FontFamily(Font(R.font.arcadebody)),
                             textAlign = TextAlign.Center,
                             color= colorResource(R.color.dark_green),
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text="Bullets",
+                            fontFamily = FontFamily(Font(R.font.arcadebody)),
                             textAlign = TextAlign.Center,
                             fontWeight = FontWeight.Bold
                         )
@@ -702,7 +739,7 @@ fun LoseDialog(onnavigateup: () -> Unit, ondismiss:() ->Unit,onnavigaterestart: 
                                 onnavigateup()
                             }
                     )
-                    Spacer(modifier=Modifier.width(16.dp))
+                    Spacer(modifier=Modifier.width(32.dp))
                     Image(
                         painter= painterResource(R.drawable.restart),
                         contentDescription = null,

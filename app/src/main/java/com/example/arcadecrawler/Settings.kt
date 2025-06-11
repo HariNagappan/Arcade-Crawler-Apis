@@ -94,6 +94,7 @@ fun ArcadeSettings(onnavigateup:()->Unit,gameViewModel: GameViewModel){
                     text = "Gun Speed: ",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily(Font(R.font.arcadebody)),
                     textAlign = TextAlign.Center,
                     color = colorResource(R.color.dark_gold),
                     modifier = Modifier.weight(1f)
@@ -103,6 +104,7 @@ fun ArcadeSettings(onnavigateup:()->Unit,gameViewModel: GameViewModel){
                     Text(
                         text = speed.name,
                         fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily(Font(R.font.arcadebody)),
                         modifier = Modifier
                             .padding(horizontal = 8.dp)
                             .clip(RoundedCornerShape(20.dp))
@@ -126,6 +128,7 @@ fun ArcadeSettings(onnavigateup:()->Unit,gameViewModel: GameViewModel){
             Text(
                 text="Bullet Speed: ",
                 fontSize = 16.sp,
+                fontFamily = FontFamily(Font(R.font.arcadebody)),
                 fontWeight= FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 color = colorResource(R.color.dark_gold),
@@ -136,6 +139,7 @@ fun ArcadeSettings(onnavigateup:()->Unit,gameViewModel: GameViewModel){
                 Text(
                     text = speed.name,
                     fontWeight= FontWeight.Bold,
+                    fontFamily = FontFamily(Font(R.font.arcadebody)),
                     modifier = Modifier
                         .padding(horizontal = 8.dp)
                         .clip(RoundedCornerShape(20.dp))
@@ -159,6 +163,7 @@ fun ArcadeSettings(onnavigateup:()->Unit,gameViewModel: GameViewModel){
                 text="Snake Speed: ",
                 fontSize = 16.sp,
                 fontWeight= FontWeight.Bold,
+                fontFamily = FontFamily(Font(R.font.arcadebody)),
                 textAlign = TextAlign.Center,
                 color = colorResource(R.color.dark_gold),
                 modifier=Modifier.weight(1f)
@@ -168,6 +173,7 @@ fun ArcadeSettings(onnavigateup:()->Unit,gameViewModel: GameViewModel){
                 Text(
                     text = speed.name,
                     fontWeight= FontWeight.Bold,
+                    fontFamily = FontFamily(Font(R.font.arcadebody)),
                     modifier = Modifier
                         .padding(horizontal = 8.dp)
                         .clip(RoundedCornerShape(20.dp))
@@ -190,7 +196,8 @@ fun ArcadeSettings(onnavigateup:()->Unit,gameViewModel: GameViewModel){
             Text(
                 text = "Music Sound",
                 textAlign = TextAlign.Center,
-                color= colorResource(R.color.dark_gray),
+                fontFamily = FontFamily(Font(R.font.arcadebody)),
+                color= colorResource(R.color.dark_gold),
                 fontWeight = FontWeight.Bold
             )
             Slider(
@@ -207,16 +214,18 @@ fun ArcadeSettings(onnavigateup:()->Unit,gameViewModel: GameViewModel){
         Spacer(modifier=Modifier.height(16.dp))
         Row(verticalAlignment = Alignment.CenterVertically,modifier=Modifier.fillMaxWidth().padding(8.dp)){
             Text(
-                text="Gun Control: ",
+                text="Gun Control:",
                 fontSize = 16.sp,
                 fontWeight= FontWeight.Bold,
-                textAlign = TextAlign.Left,
+                textAlign = TextAlign.Center,
+                fontFamily = FontFamily(Font(R.font.arcadebody)),
                 color = colorResource(R.color.dark_gold),
                 modifier=Modifier.weight(1f)
             )
             Text(
                 text = "JoyStick",
                 fontWeight= FontWeight.Bold,
+                fontFamily = FontFamily(Font(R.font.arcadebody)),
                 modifier = Modifier
                     .padding(horizontal = 8.dp)
                     .clip(RoundedCornerShape(20.dp))
@@ -235,6 +244,7 @@ fun ArcadeSettings(onnavigateup:()->Unit,gameViewModel: GameViewModel){
             Text(
                 text = "Gyroscope",
                 fontWeight= FontWeight.Bold,
+                fontFamily = FontFamily(Font(R.font.arcadebody)),
                 modifier = Modifier
                     .padding(horizontal = 8.dp)
                     .clip(RoundedCornerShape(20.dp))
@@ -259,6 +269,7 @@ fun ArcadeSettings(onnavigateup:()->Unit,gameViewModel: GameViewModel){
                 Text(
                     text = "GyroScope Sensitivity",
                     textAlign = TextAlign.Center,
+                    fontFamily = FontFamily(Font(R.font.arcadebody)),
                     color= colorResource(R.color.dark_gray),
                     fontWeight = FontWeight.Bold
                 )
