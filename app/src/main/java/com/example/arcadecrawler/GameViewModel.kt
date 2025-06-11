@@ -929,13 +929,16 @@ class GameViewModel: ViewModel() {
         this.mushroomheight=mushroomheight
         for(relative in 0 until relative_mushroom_layout.size){
             AddMushroom(
-                offset = Offset(relative_mushroom_layout[relative][0],relative_mushroom_layout[relative][1]),
-                mushroomType = MushroomType.NORMAL,
+                offset = Offset(relative_mushroom_layout[relative][0].coerceIn(leastx,maxx),relative_mushroom_layout[relative][0].coerceIn(leasty,maxy)*GetRandom()),
+                mushroomType = mushroomType,
                 mushroomwidth = mushroomwidth,
                 mushroomheight = mushroomheight
             )
             IncrementMushroomId()
         }
+    }
+    fun GetRandom():Float{
+        return listOf(0.25f,0.5f,0.75f,1f).random()
     }
     fun ResetMushrooms(){
         //org_mushroom_count=10

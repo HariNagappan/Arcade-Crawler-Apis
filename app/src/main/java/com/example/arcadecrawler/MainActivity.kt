@@ -584,6 +584,7 @@ fun PlayerInfoDialog(ondismiss: () -> Unit,gameViewModel: GameViewModel){
                     edit.putString("player_name",cur_name)
                     edit.putString("player_password",cur_password)
                     edit.apply()
+                    gameViewModel.GetPlayerName(context=context)
                 },
                     colors= ButtonDefaults.buttonColors(colorResource(R.color.baby_blue))
                 ) {
