@@ -118,13 +118,15 @@ fun MainGame(gameViewModel: GameViewModel,onnavigateup:()->Unit,onnavigaterestar
         if(gameViewModel.iswin){
             val tmp=gameViewModel.leaderboard.find { it.name==gameViewModel.cur_player_name }
             if(tmp==null || (tmp!=null && tmp.score>gameViewModel.total_bullet_count)) {//check for min bullet count if there
-                gameViewModel.SubmitPlayerData(
-                    LeaderboardPost(
-                        name = gameViewModel.cur_player_name,
-                        password = gameViewModel.cur_player_password,
-                        score = gameViewModel.total_bullet_count
+                if(gameViewModel.total_score>gameViewModel.top_score) {
+                    gameViewModel.SubmitPlayerData(
+                        LeaderboardPost(
+                            name = gameViewModel.cur_player_name,
+                            password = gameViewModel.cur_player_password,
+                            score = gameViewModel.total_score
+                        )
                     )
-                )
+                }
             }
             WinDialog(
                 onnavigateup={
@@ -132,7 +134,6 @@ fun MainGame(gameViewModel: GameViewModel,onnavigateup:()->Unit,onnavigaterestar
                 ondismiss = {gameViewModel.iswin=false},
                 onnavigaterestart={
                     onnavigaterestart()},
-                cur_bullet_count = gameViewModel.total_bullet_count,
                 gameViewModel = gameViewModel)
         }
         if(gameViewModel.islost){
@@ -141,7 +142,6 @@ fun MainGame(gameViewModel: GameViewModel,onnavigateup:()->Unit,onnavigaterestar
                 ondismiss = {gameViewModel.islost=false},
                 onnavigaterestart={
                     onnavigaterestart()},
-                cur_bullet_count = gameViewModel.total_bullet_count,
                 gameViewModel=gameViewModel)
         }
         if(gameViewModel.isgyro) {
@@ -216,16 +216,20 @@ fun MainCanvas(gameViewModel: GameViewModel,modifier:Modifier){
     LaunchedEffect(gameViewModel.initial_snakes) {
         Log.d("initialsnakes","${gameViewModel.initial_snakes}")
         if(gameViewModel.snake_list.isEmpty()){
-            gameViewModel.AddSnake(
-                //start_position = Offset(mushroombitmap.width.toFloat(), mushroombitmap.height.toFloat()),
-                start_position = Offset(0f,-snakenodebitmap.height.toFloat()*1.2f),
-                nodewidth = snakenodebitmap.width.toFloat(),
-                movement = Movement.RIGHT,
-                nodeheight = snakenodebitmap.height.toFloat()
-            )
             gameViewModel.FetchRandomColor()
-            gameViewModel.gunbitmapwidth=gunbitmap.width.toFloat()
-            gameViewModel.gunbitmapheight=gunbitmap.height.toFloat()
+            gameViewModel.fetchrandomcolorjob!!.invokeOnCompletion {
+                if(!gameViewModel.fetchrandomcolorjob!!.isCancelled) {
+                    gameViewModel.AddSnake(
+                        //start_position = Offset(mushroombitmap.width.toFloat(), mushroombitmap.height.toFloat()),
+                        start_position = Offset(0f, -snakenodebitmap.height.toFloat() * 1.2f),
+                        nodewidth = snakenodebitmap.width.toFloat(),
+                        movement = Movement.RIGHT,
+                        nodeheight = snakenodebitmap.height.toFloat()
+                    )
+                    gameViewModel.gunbitmapwidth = gunbitmap.width.toFloat()
+                    gameViewModel.gunbitmapheight = gunbitmap.height.toFloat()
+                }
+            }
         }
     }
     LaunchedEffect(gameViewModel.should_spawn_spider) {

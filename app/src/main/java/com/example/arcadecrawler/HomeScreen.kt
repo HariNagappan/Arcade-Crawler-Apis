@@ -1,5 +1,8 @@
 package com.example.arcadecrawler
 
+import android.R.attr.fontFamily
+import android.R.attr.fontWeight
+import android.os.Build
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -213,16 +216,24 @@ fun LeaderboardCard(rank:Int,leaderboard: LeaderboardGet,cur_player_name:String)
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Bullets Shot: ${leaderboard.score}",
+                text = "Top Score: ${leaderboard.score}",
                 color=colorResource(R.color.deep_purple),
                 fontFamily = FontFamily(Font(R.font.arcadebody)),
                 fontWeight = FontWeight.Bold
             )
-            Text(
-                text = "Date,Time: ${leaderboard.created_at}",
-                fontFamily = FontFamily(Font(R.font.arcadebody)),
-                fontWeight = FontWeight.Bold
-            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Text(
+                    text = "Date,Time: ${GetUtcInLocalTime(leaderboard.created_at)}",
+                    fontFamily = FontFamily(Font(R.font.arcadebody)),
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
+    }
+}
+fun GetTopScoreOfPlayer(gameViewModel: GameViewModel){
+    val player_info=gameViewModel.leaderboard.find { it.name==gameViewModel.cur_player_name }
+    if(player_info!=null){
+        gameViewModel.top_score=player_info.score
     }
 }

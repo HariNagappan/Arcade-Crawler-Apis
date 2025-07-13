@@ -2,6 +2,8 @@ package com.example.arcadecrawler
 
 import android.R.attr.data
 import android.graphics.Point
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -11,6 +13,10 @@ import androidx.compose.ui.unit.dp
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.create
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import kotlin.time.Duration
 
 enum class Screens{
@@ -55,8 +61,19 @@ val all_powerup_imgs=mapOf(
     5 to R.drawable.triple_bullet,
     6 to R.drawable.poisonremover
 )
-val TOTAL_JOBS=6
 
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun GetUtcInLocalTime(utc_time:String):String{
+    val formatter= DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+    val utcDateTime = LocalDateTime.parse(utc_time, formatter).atZone(ZoneOffset.UTC)
+    val localDateTime = utcDateTime.withZoneSameInstant(ZoneId.systemDefault())
+    val displayFormat = DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a")
+    return localDateTime.format(displayFormat)
+}
+
+
+val SCORE_INCREMENT=10
 data class Joystick(var thumbpositon:Offset=Offset.Zero,var outerradius:Float=0f,var innerradius:Float=0f)
 data class Bullet(val id:Int,var bullet_position:MutableState<Offset> = mutableStateOf(Offset.Zero),var bitmap_width:Float,var bitmap_height:Float)
 data class Mushroom(val id:Int,var mushroomType: MushroomType,var mushroom_position:Offset,var health:Int=5,var bitmap_width: Float,var bitmap_height: Float)

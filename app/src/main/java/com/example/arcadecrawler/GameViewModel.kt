@@ -156,7 +156,6 @@ class GameViewModel: ViewModel() {
     var gun_bitmap :ImageBitmap?=null
     var scorpion_bitmap :ImageBitmap?=null
     val leaderboard =mutableStateListOf<LeaderboardGet>()
-    var top10=listOf<LeaderboardGet>()
     var relative_mushroom_layout =mutableListOf<List<Float>>()
     var cur_player_name:String=""
     var cur_player_password:String=""
@@ -164,6 +163,8 @@ class GameViewModel: ViewModel() {
 
     lateinit var bg_audio_file:File
     var error_msg=""
+    var total_score=0
+    var top_score=0
 
     fun FetchAllResources(context: Context){
         fetchalldata=viewModelScope.launch {
@@ -278,7 +279,6 @@ class GameViewModel: ViewModel() {
             leaderboard.clear()
             val response=api.GetLeaderboard()
             leaderboard.addAll(response)
-            GetTop10()
         }
         catch (e: Exception){
             error_msg+="\nCould not fetch Leaderboard"
@@ -306,10 +306,6 @@ class GameViewModel: ViewModel() {
             error_msg+="\nCould not Post Player Data "
             Log.d("apifail","$error_msg")
         }
-    }
-    fun GetTop10(){
-        top10=leaderboard.sortedBy { it.score }.take(10)
-        Log.d("apisuccess","top 10: size:${top10.size}")
     }
     fun GetPlayerName(context: Context){//put this after leadboard is complete as we have to get a unique name
         val prefs=context.getSharedPreferences(shared_pref_filename, Context.MODE_PRIVATE)
@@ -848,6 +844,7 @@ class GameViewModel: ViewModel() {
             RemoveScorpion(id=scorpion_remove_id)
         }
         for(pair in snake_nodes_to_remove){
+            total_score+=SCORE_INCREMENT
             RemoveSnakeNode(snake=pair.first, snakeNode = pair.second)
         }
         RemoveRequiredMushrooms()
@@ -1039,6 +1036,7 @@ class GameViewModel: ViewModel() {
         ResetSnakes()
         ResetSpiderStuff()
         ResetScorpionStuff()
+        total_score=0
         iswin=false
         islost=false
         paused=false

@@ -219,7 +219,7 @@ fun LeaderboardDialog(ondismiss: () -> Unit,gameViewModel: GameViewModel) {
     Dialog(onDismissRequest = { ondismiss() }) {
         Box(
             modifier = Modifier
-                .size(350.dp, 400.dp)
+                .size(380.dp, 400.dp)
                 .background(
                     color = colorResource(R.color.blueish),
                     shape = RoundedCornerShape(33.dp)
@@ -244,7 +244,7 @@ fun LeaderboardDialog(ondismiss: () -> Unit,gameViewModel: GameViewModel) {
             ) {
                 Text(
                     text = "Leaderboard",
-                    fontSize = 24.sp,
+                    fontSize = 22.sp,
                     textAlign = TextAlign.Center,
                     color = colorResource(R.color.little_dark_purple),
                     fontFamily = FontFamily(Font(R.font.arcade)),
@@ -255,10 +255,10 @@ fun LeaderboardDialog(ondismiss: () -> Unit,gameViewModel: GameViewModel) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.verticalScroll(rememberScrollState())
                 ) {
-                    for (i in 0 until gameViewModel.top10.size) {
+                    for (i in 0 until gameViewModel.leaderboard.size) {
                         LeaderboardCard(
                             rank = i + 1,
-                            leaderboard = gameViewModel.top10[i],
+                            leaderboard = gameViewModel.leaderboard[i],
                             cur_player_name = gameViewModel.cur_player_name
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -533,7 +533,7 @@ fun PauseDialog(onnavigateup: () -> Unit,onreset:() ->Unit,onresume:()->Unit,gam
 }
 
 @Composable
-fun WinDialog(ondismiss:() ->Unit,onnavigateup: () -> Unit,onnavigaterestart: () -> Unit,cur_bullet_count:Int,gameViewModel: GameViewModel){
+fun WinDialog(ondismiss:() ->Unit,onnavigateup: () -> Unit,onnavigaterestart: () -> Unit,gameViewModel: GameViewModel){
     Dialog(onDismissRequest = {}){
         Box(modifier=Modifier
             //.size(300.dp,240.dp)
@@ -559,14 +559,14 @@ fun WinDialog(ondismiss:() ->Unit,onnavigateup: () -> Unit,onnavigaterestart: ()
                 Row(modifier=Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text="Bullets Shot",
+                            text="Total Score",
                             textAlign = TextAlign.Center,
                             fontFamily = FontFamily(Font(R.font.arcadebody)),
                             color = colorResource(R.color.dark_gold),
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text="$cur_bullet_count",
+                            text="${gameViewModel.total_score}",
                             fontSize = 40.sp,
                             textAlign = TextAlign.Center,
                             fontFamily = FontFamily(Font(R.font.arcadebody)),
@@ -574,7 +574,7 @@ fun WinDialog(ondismiss:() ->Unit,onnavigateup: () -> Unit,onnavigaterestart: ()
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text="Bullets",
+                            text="Points",
                             textAlign = TextAlign.Center,
                             fontFamily = FontFamily(Font(R.font.arcadebody)),
                             fontWeight = FontWeight.Bold
@@ -613,7 +613,7 @@ fun WinDialog(ondismiss:() ->Unit,onnavigateup: () -> Unit,onnavigaterestart: ()
 }
 
 @Composable
-fun LoseDialog(onnavigateup: () -> Unit, ondismiss:() ->Unit,onnavigaterestart: () -> Unit,cur_bullet_count:Int,gameViewModel: GameViewModel){
+fun LoseDialog(onnavigateup: () -> Unit, ondismiss:() ->Unit,onnavigaterestart: () -> Unit,gameViewModel: GameViewModel){
     Dialog(onDismissRequest = {}){
         Box(modifier=Modifier
             .border(width=4.dp,color= colorResource(R.color.dark_gray), shape = RoundedCornerShape(24.dp))
@@ -639,14 +639,14 @@ fun LoseDialog(onnavigateup: () -> Unit, ondismiss:() ->Unit,onnavigaterestart: 
                     horizontalArrangement = Arrangement.Center){
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text="Bullet Shot",
+                            text="Total Score",
                             textAlign = TextAlign.Center,
                             fontFamily = FontFamily(Font(R.font.arcadebody)),
                             color = colorResource(R.color.dark_gold),
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text="$cur_bullet_count",
+                            text="${gameViewModel.total_score}",
                             fontSize = 40.sp,
                             fontFamily = FontFamily(Font(R.font.arcadebody)),
                             textAlign = TextAlign.Center,
@@ -654,7 +654,7 @@ fun LoseDialog(onnavigateup: () -> Unit, ondismiss:() ->Unit,onnavigaterestart: 
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text="Bullets",
+                            text="Points",
                             fontFamily = FontFamily(Font(R.font.arcadebody)),
                             textAlign = TextAlign.Center,
                             fontWeight = FontWeight.Bold
