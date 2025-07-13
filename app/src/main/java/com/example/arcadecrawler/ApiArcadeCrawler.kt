@@ -37,7 +37,7 @@ interface ApiArcadeCrawler {
     suspend fun PostPlayerData(@Body player_data: LeaderboardPost): Response<JsonObject>
 
     @POST("powerUps")
-    suspend fun PostPowerUps(@Body issuccess: PowerUpPost): List<PowerUpGet>
+    suspend fun PostPowerUps(@Body issuccess: PowerUpPost): List<PowerUpData>
 }
 val retro= Retrofit.Builder()
     .baseUrl("https://crawler-connect.vercel.app/")

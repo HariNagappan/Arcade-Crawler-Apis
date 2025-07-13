@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -56,6 +57,7 @@ fun ArcadeSettings(onnavigateup:()->Unit,gameViewModel: GameViewModel){
     var snakeselectedoption by remember{mutableStateOf(sharedprefs.getInt("snakeselectedoption", speed_options.indexOf(gameViewModel.snakevelocityfactor)))}
 
     var volumesliderpos by remember { mutableStateOf(gameViewModel.cur_volume) }
+    var screenbrightnesssliderpos by remember { mutableStateOf(gameViewModel.homescreen_brightness) }
     var gyrosliderpos by remember { mutableStateOf(gameViewModel.gyro_sensitivity) }
     var isgyro by remember{ mutableStateOf(gameViewModel.isgyro)}
     Column(horizontalAlignment = Alignment.CenterHorizontally ,modifier= Modifier.fillMaxSize().background(color= colorResource(R.color.ivory)).padding(top=32.dp)){
@@ -212,6 +214,27 @@ fun ArcadeSettings(onnavigateup:()->Unit,gameViewModel: GameViewModel){
             )
         }
         Spacer(modifier=Modifier.height(16.dp))
+        Row(verticalAlignment = Alignment.CenterVertically,modifier=Modifier.fillMaxWidth().padding(4.dp)) {
+            Text(
+                text = "Screen Brightness",
+                textAlign = TextAlign.Center,
+                fontFamily = FontFamily(Font(R.font.arcadebody)),
+                color= colorResource(R.color.dark_gold),
+                fontWeight = FontWeight.Bold
+            )
+            Slider(
+                value = screenbrightnesssliderpos,
+                onValueChange = {
+                    screenbrightnesssliderpos = it
+                    gameViewModel.homescreen_brightness=it
+                    SetBrightness(context=context, newbrightness = gameViewModel.homescreen_brightness)
+                },
+                valueRange = 0f..1f,
+                modifier = Modifier
+                    .weight(1f)
+            )
+        }
+        Spacer(modifier=Modifier.height(16.dp))
         Row(verticalAlignment = Alignment.CenterVertically,modifier=Modifier.fillMaxWidth().padding(8.dp)){
             Text(
                 text="Gun Control:",
@@ -260,8 +283,6 @@ fun ArcadeSettings(onnavigateup:()->Unit,gameViewModel: GameViewModel){
                     .padding(vertical = 4.dp, horizontal = 8.dp),
                 color = colorResource(R.color.coral)
             )
-
-
         }
         AnimatedVisibility(isgyro) {
             Spacer(modifier=Modifier.height(16.dp))
@@ -270,7 +291,7 @@ fun ArcadeSettings(onnavigateup:()->Unit,gameViewModel: GameViewModel){
                     text = "GyroScope Sensitivity",
                     textAlign = TextAlign.Center,
                     fontFamily = FontFamily(Font(R.font.arcadebody)),
-                    color= colorResource(R.color.dark_gray),
+                    color= colorResource(R.color.dark_gold),
                     fontWeight = FontWeight.Bold
                 )
                 Slider(
@@ -306,6 +327,8 @@ fun ArcadeSettings(onnavigateup:()->Unit,gameViewModel: GameViewModel){
                         editor.putFloat("bgvolume",volumesliderpos)
                         editor.putBoolean("isgyro",isgyro)
                         editor.putFloat("gyrosensitvity",gyrosliderpos)
+                        editor.putFloat("homescreenbrightness",screenbrightnesssliderpos)
+
                         editor.apply()
                         onnavigateup()
                     }

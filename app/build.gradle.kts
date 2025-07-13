@@ -68,6 +68,7 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.9.3") // For logging requests
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation("com.caverock:androidsvg:1.4")
+    implementation("androidx.compose.material:material-icons-extended:1.6.1")
     implementation("com.google.android.exoplayer:exoplayer:2.19.1")
     implementation ("com.squareup.okio:okio:3.2.0")
 }

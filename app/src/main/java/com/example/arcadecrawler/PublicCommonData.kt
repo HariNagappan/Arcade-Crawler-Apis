@@ -1,5 +1,6 @@
 package com.example.arcadecrawler
 
+import android.R.attr.data
 import android.graphics.Point
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -46,7 +47,15 @@ val blackwhitegridheight=100.dp
 val speed_options = listOf(Speed.SLOW,Speed.MEDIUM,Speed.FAST)
 val shared_pref_filename="ArcadeCrawler"
 val all_movements=Movement.values().toList()
-
+val all_powerup_imgs=mapOf(
+    1 to R.drawable.scorpionshield,
+    2 to R.drawable.rapidfire,
+    3 to R.drawable.speedup,
+    4 to R.drawable.mushroombomb,
+    5 to R.drawable.triple_bullet,
+    6 to R.drawable.poisonremover
+)
+val TOTAL_JOBS=6
 
 data class Joystick(var thumbpositon:Offset=Offset.Zero,var outerradius:Float=0f,var innerradius:Float=0f)
 data class Bullet(val id:Int,var bullet_position:MutableState<Offset> = mutableStateOf(Offset.Zero),var bitmap_width:Float,var bitmap_height:Float)
@@ -93,7 +102,7 @@ data class LeaderboardPost(
 data class PowerUpPost(
     val centipedeDestroyed: Boolean
 )
-data class PowerUpGet(
+data class PowerUpData(
     val id: Int,
     val name: String,
     val description: String,

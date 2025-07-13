@@ -132,7 +132,8 @@ class GameViewModel: ViewModel() {
     val all_short_sounds= mutableMapOf<String,Int>()
     var cur_volume by mutableStateOf(1f)
 
-    var cur_brightness by mutableStateOf(0.7f)
+    var gameplay_brightness by mutableStateOf(0.7f)
+    var homescreen_brightness by mutableStateOf(1f)
 
     var iswin by mutableStateOf(false)
     var islost by mutableStateOf(false)
@@ -154,7 +155,7 @@ class GameViewModel: ViewModel() {
     var poison_mushroom_bitmap:ImageBitmap?=null
     var gun_bitmap :ImageBitmap?=null
     var scorpion_bitmap :ImageBitmap?=null
-    val leaderboard =mutableListOf<LeaderboardGet>()
+    val leaderboard =mutableStateListOf<LeaderboardGet>()
     var top10=listOf<LeaderboardGet>()
     var relative_mushroom_layout =mutableListOf<List<Float>>()
     var cur_player_name:String=""
@@ -274,8 +275,8 @@ class GameViewModel: ViewModel() {
     }
     private suspend fun FetchLeaderboard(){
         try{
-            val response=api.GetLeaderboard()
             leaderboard.clear()
+            val response=api.GetLeaderboard()
             leaderboard.addAll(response)
             GetTop10()
         }
@@ -294,9 +295,7 @@ class GameViewModel: ViewModel() {
         viewModelScope.launch {
             val tmp=async(Dispatchers.IO) { FetchLeaderboard() }
             tmp.await()
-
         }
-
     }
     private suspend fun PostPlayerData(player_data: LeaderboardPost){
         try {
@@ -1022,8 +1021,8 @@ class GameViewModel: ViewModel() {
        }
     }
 
-    fun SetBrightness(newbrightness:Float){
-        cur_brightness=newbrightness
+    fun SetGameplayBrightness(newbrightness:Float){
+        gameplay_brightness=newbrightness
     }
 
     fun PauseGame(){
